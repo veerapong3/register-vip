@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
+import { downloadCsv, stamp } from "@/lib/exportCsv";
 import { BASE_PRICE, SHIRT_SIZES } from "@/lib/sizes";
 
 type PaymentStatus = "รอตรวจสอบ" | "ชำระแล้ว" | "ไม่ครบ/มีปัญหา";
@@ -149,6 +150,90 @@ export default function AdminPage() {
     }
   }
 
+  function exportNames() {
+    const rows: (string | number)[][] = [];
+    for (const r of registrations) {
+      r.people.forEach((p, i) => {
+        rows.push([
+          r.timestamp,
+          r.registrationId,
+          r.schoolName,
+          r.schoolId,
+          r.contactName,
+          r.contactPhone,
+          i + 1,
+          p.name,
+          p.size,
+          BASE_PRICE,
+          r.slipUrl,
+          r.note,
+        ]);
+      });
+    }
+    downloadCsv(
+      `vip-names-${stamp()}.csv`,
+      [
+        "วันเวลา",
+        "รหัสลงทะเบียน",
+        "โรงเรียน",
+        "รหัสโรงเรียน",
+        "ผู้ประสานงาน",
+        "เบอร์โทร",
+        "ลำดับ",
+        "ชื่อผู้สวมใส่",
+        "ไซส์",
+        "ราคา",
+        "ลิงก์สลิป",
+        "หมายเหตุ",
+      ],
+      rows,
+    );
+  }
+
+  function exportSchools() {
+    const sizeCodes = SHIRT_SIZES.map((s) => s.code);
+    const rows = schools.map((s) => [
+      s.schoolName,
+      s.schoolId,
+      s.totalQty,
+      s.totalAmount,
+      s.paymentStatus,
+      s.paymentNote,
+      s.updatedAt || "",
+      s.registrationCount || 0,
+      ...sizeCodes.map((code) => s.sizes[code] || 0),
+    ]);
+    downloadCsv(
+      `vip-schools-${stamp()}.csv`,
+      [
+        "โรงเรียน",
+        "รหัสโรงเรียน",
+        "จำนวนตัว",
+        "ยอดเงิน",
+        "สถานะชำระเงิน",
+        "หมายเหตุแอดมิน",
+        "อัปเดตล่าสุด",
+        "จำนวนรายการ",
+        ...sizeCodes.map((c) => `ไซส์ ${c}`),
+      ],
+      rows,
+    );
+  }
+
+  function exportSizeSummary() {
+    const rows = SHIRT_SIZES.filter((s) => sizeTotals[s.code]).map((s) => [
+      s.code,
+      s.chestInches ?? "",
+      sizeTotals[s.code] || 0,
+      (sizeTotals[s.code] || 0) * BASE_PRICE,
+    ]);
+    downloadCsv(
+      `vip-sizes-${stamp()}.csv`,
+      ["ไซส์", "รอบอก (นิ้ว)", "จำนวนตัว", "มูลค่า"],
+      rows,
+    );
+  }
+
   async function saveSchool(school: SchoolSummary) {
     setSavingId(school.schoolId);
     setError(null);
@@ -267,6 +352,25 @@ export default function AdminPage() {
             {label}
           </button>
         ))}
+      </div>
+
+      <div className="admin-export-bar">
+        <p className="admin-export-label">ส่งออกข้อมูล (CSV / เปิดใน Excel ได้)</p>
+        <div className="admin-export-actions">
+          <button type="button" className="btn-export" onClick={exportNames}>
+            ส่งออกรายชื่อผู้สวมใส่
+          </button>
+          <button type="button" className="btn-export" onClick={exportSchools}>
+            ส่งออกสรุปโรงเรียน
+          </button>
+          <button
+            type="button"
+            className="btn-export"
+            onClick={exportSizeSummary}
+          >
+            ส่งออกสรุปไซส์
+          </button>
+        </div>
       </div>
 
       {error && <div className="error-box mt-4">{error}</div>}

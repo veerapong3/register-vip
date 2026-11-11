@@ -795,6 +795,44 @@ body {
   margin: 1.25rem 0 0.5rem;
 }
 
+.admin-export-bar {
+  margin: 0.85rem 0 0.25rem;
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(160deg, #fff7fb, #ffe8f1);
+  border: 1px solid #f3c3d5;
+}
+
+.admin-export-label {
+  margin: 0 0 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--pink-deep);
+}
+
+.admin-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.btn-export {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--pink-deep), #8f2148);
+  color: white;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.6rem 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(181, 45, 92, 0.18);
+}
+
+.btn-export:hover {
+  filter: brightness(1.05);
+}
+
 .admin-tab {
   border: 1px solid var(--line);
   border-radius: 999px;
