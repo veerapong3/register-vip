@@ -237,7 +237,7 @@ export function RegistrationForm() {
               className="hero-cta hero-cta-ghost"
               onClick={() => setLightbox(true)}
             >
-              ดูรูปเสื้อเต็มจอ
+              รูปแบบเสื้อและขนาด (Size)
             </button>
             <a href="#register" className="hero-cta">
               เริ่มลงทะเบียน
