@@ -206,7 +206,7 @@ export function RegistrationForm() {
           type="button"
           className="hero-media hero-media-btn"
           onClick={() => setLightbox(true)}
-          aria-label="ดูรูปเสื้อขนาดเต็ม"
+          aria-label="รูปแบบเสื้อและขนาด (Size)"
         >
           <Image
             src="/jersey.jpg"
