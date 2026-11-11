@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fff7f9;
+  --foreground: #2a1a1d;
+  --ink: #2a1a1d;
+  --muted: #7a5a62;
+  --line: #f0d4dc;
+  --pink-deep: #c43b6e;
+  --pink-mid: #e86a95;
+  --pink-soft: #ffe4ec;
+  --brown: #5c3a2e;
+  --cream: #fff1f4;
+  --panel: rgba(255, 255, 255, 0.88);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sarabun);
+  --font-display: var(--font-bebas);
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #ffd0de 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #ffc2d4 0%, transparent 50%),
+    linear-gradient(180deg, #fff7f9 0%, #ffeef3 40%, #fff8fa 100%);
+  color: var(--foreground);
+  font-family: var(--font-sarabun), "Sarabun", sans-serif;
+  min-height: 100vh;
+}
+
+.font-display {
+  font-family: var(--font-bebas), "Bebas Neue", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  box-shadow: 0 18px 40px rgba(196, 59, 110, 0.08);
+}
+
+@media (min-width: 640px) {
+  .panel {
+    padding: 1.75rem;
+  }
+}
+
+.success-panel {
+  text-align: center;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pink-deep);
+}
+
+.section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.35rem;
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field:focus {
+  border-color: var(--pink-mid);
+  box-shadow: 0 0 0 3px rgba(232, 106, 149, 0.2);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--pink-deep), #a82d58);
+  color: white;
+  font-weight: 700;
+  padding: 0.85rem 1.5rem;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--pink-mid);
+  color: var(--pink-deep);
+  background: white;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+}
+
+.btn-secondary:hover {
+  background: var(--pink-soft);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--pink-soft);
+  color: var(--pink-deep);
+  padding: 0.35rem 0.75rem;
+  font-weight: 600;
+}
+
+.stat {
+  border-radius: 1rem;
+  background: var(--pink-soft);
+  padding: 0.9rem 1rem;
+  text-align: left;
+}
+
+.stat dt {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.stat dd {
+  margin-top: 0.15rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.size-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.size-table th,
+.size-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.55rem 0.4rem;
+}
+
+.size-table th {
+  background: var(--pink-soft);
+  color: var(--pink-deep);
+  font-weight: 700;
+}
+
+.size-table td:first-child,
+.size-table th:first-child {
+  text-align: left;
+  padding-left: 0.75rem;
+  font-weight: 600;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.55s ease both;
+}
+
+.delay-1 {
+  animation-delay: 0.08s;
+}
+.delay-2 {
+  animation-delay: 0.16s;
+}
+.delay-3 {
+  animation-delay: 0.24s;
+}
+
+.site-header {
+  padding: 1.25rem 0 0.5rem;
+}
+
+.brand-mark {
+  font-family: var(--font-bebas), "Bebas Neue", sans-serif;
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  line-height: 0.95;
+  color: var(--pink-deep);
+  text-shadow: 0 8px 24px rgba(196, 59, 110, 0.18);
+}
+
+.brand-sub {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
