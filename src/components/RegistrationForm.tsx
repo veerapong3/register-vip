@@ -429,18 +429,29 @@ export function RegistrationForm() {
 
             <div>
               <label className="field-label">อัปโหลดสลิปโอนเงิน</label>
-              <label className="file-btn">
+              <label
+                className={`file-drop${slip ? " has-file" : ""}`}
+                htmlFor="slip-upload"
+              >
                 <input
+                  id="slip-upload"
                   type="file"
                   accept="image/*,.pdf"
                   onChange={(e) => onSlipChange(e.target.files?.[0] ?? null)}
                   required={!slip}
                 />
-                <span>{slip ? "เปลี่ยนไฟล์สลิป" : "เลือกไฟล์สลิป"}</span>
+                <span className="file-drop-icon" aria-hidden>
+                  ↑
+                </span>
+                <span className="file-drop-title">
+                  {slip ? "กดเพื่อเปลี่ยนสลิป" : "กดที่นี่เพื่ออัปโหลดสลิป"}
+                </span>
+                <span className="file-drop-sub">
+                  {slip
+                    ? slip.name
+                    : "รองรับไฟล์รูปภาพ หรือ PDF · ขนาดไม่เกิน 8 MB"}
+                </span>
               </label>
-              {slip && (
-                <p className="file-name">{slip.name}</p>
-              )}
               {slipPreview && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
