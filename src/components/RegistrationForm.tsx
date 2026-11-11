@@ -31,6 +31,7 @@ export function RegistrationForm() {
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{
     registrationId: string;
@@ -50,6 +51,14 @@ export function RegistrationForm() {
       qty: counts[s.code],
     }));
   }, [people]);
+
+  const sizeSummaryText = useMemo(
+    () =>
+      sizeBreakdown.length
+        ? sizeBreakdown.map((s) => `${s.code}×${s.qty}`).join(" · ")
+        : "-",
+    [sizeBreakdown],
+  );
 
   function updatePerson(id: string, patch: Partial<Person>) {
     setPeople((prev) =>
@@ -73,7 +82,7 @@ export function RegistrationForm() {
     setSlipPreview(file ? URL.createObjectURL(file) : null);
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -81,12 +90,27 @@ export function RegistrationForm() {
       setError("กรุณาเลือกโรงเรียน");
       return;
     }
+    if (!contactName.trim() || !contactPhone.trim()) {
+      setError("กรุณากรอกผู้ประสานงานและเบอร์โทร");
+      return;
+    }
+    if (people.some((p) => !p.name.trim())) {
+      setError("กรุณากรอกชื่อผู้สวมใส่ให้ครบ");
+      return;
+    }
     if (!slip) {
       setError("กรุณาแนบสลิปการโอนเงิน");
       return;
     }
 
+    setConfirmOpen(true);
+  }
+
+  async function confirmSubmit() {
+    if (!school || !slip) return;
+    setConfirmOpen(false);
     setSubmitting(true);
+    setError(null);
     try {
       const form = new FormData();
       form.set("schoolId", school.id);
@@ -375,22 +399,23 @@ export function RegistrationForm() {
           </div>
 
           <div className="school-total-box">
-            <div>
+            <div className="school-total-main">
               <p className="school-total-label">
-                ยอดที่โรงเรียนต้องชำระ
+                สรุปก่อนชำระ
                 {school ? ` · ${school.name}` : ""}
               </p>
-              <p className="school-total-amount">
-                {total.toLocaleString("th-TH")} บาท
+              <p className="school-total-line">
+                รวม <strong>{people.length}</strong> ตัว ·{" "}
+                <strong>{total.toLocaleString("th-TH")}</strong> บาท
               </p>
               <p className="school-total-sub">
-                {people.length} ตัว × {BASE_PRICE} บาท
+                ไซส์: {sizeSummaryText}
               </p>
             </div>
             <div className="school-total-sizes">
               {sizeBreakdown.map((s) => (
                 <span key={s.code}>
-                  {s.code} × {s.qty}
+                  {s.code}×{s.qty}
                 </span>
               ))}
             </div>
@@ -482,7 +507,7 @@ export function RegistrationForm() {
         <div className="total-bar">
           <div>
             <p className="m-0 text-sm text-white/80">
-              ยอดรวมโรงเรียน · {people.length} ตัว × {BASE_PRICE} บาท
+              {people.length} ตัว · {sizeSummaryText}
             </p>
             <p className="amount m-0 mt-1">
               {total.toLocaleString("th-TH")} บาท
@@ -495,6 +520,70 @@ export function RegistrationForm() {
 
         <SiteFooter />
       </form>
+
+      {confirmOpen && (
+        <div
+          className="confirm-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-title"
+        >
+          <div className="confirm-card">
+            <p className="step-kicker">ยืนยันก่อนส่ง</p>
+            <h2 id="confirm-title" className="confirm-title">
+              ตรวจสอบข้อมูลก่อนลงทะเบียน
+            </h2>
+            <ul className="confirm-list">
+              <li>
+                <span>โรงเรียน</span>
+                <strong>{school?.name}</strong>
+              </li>
+              <li>
+                <span>ผู้ประสานงาน</span>
+                <strong>
+                  {contactName.trim()} · {contactPhone.trim()}
+                </strong>
+              </li>
+              <li>
+                <span>จำนวนเสื้อ</span>
+                <strong>{people.length} ตัว</strong>
+              </li>
+              <li>
+                <span>ไซส์</span>
+                <strong>{sizeSummaryText}</strong>
+              </li>
+              <li>
+                <span>ยอดโอน</span>
+                <strong className="text-[var(--pink-deep)]">
+                  {total.toLocaleString("th-TH")} บาท
+                </strong>
+              </li>
+              <li>
+                <span>สลิป</span>
+                <strong>{slip?.name || "-"}</strong>
+              </li>
+            </ul>
+            <div className="confirm-actions">
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => setConfirmOpen(false)}
+                disabled={submitting}
+              >
+                แก้ไขอีกครั้ง
+              </button>
+              <button
+                type="button"
+                className="btn-confirm"
+                onClick={confirmSubmit}
+                disabled={submitting}
+              >
+                ยืนยันส่งข้อมูล
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
