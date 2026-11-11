@@ -300,11 +300,11 @@ export function RegistrationForm() {
             <div className="flex-1">
               <p className="step-kicker">รายชื่อเสื้อ</p>
               <h2 className="step-title">เพิ่มรายชื่อและเลือกไซส์</h2>
-              <p className="step-desc mb-0">กดปุ่มไซส์ได้เลย · ตัวละ {BASE_PRICE}</p>
+              <p className="step-desc mb-0">
+                กรอกคนที่ 1 ก่อน แล้วกดเพิ่มคนที่ 2, 3, 4… ด้านล่าง · ตัวละ{" "}
+                {BASE_PRICE}
+              </p>
             </div>
-            <button type="button" className="btn-add" onClick={addPerson}>
-              + เพิ่มรายชื่อ
-            </button>
           </div>
 
           <div className="size-guide" aria-label="ตารางไซส์อ้างอิง">
@@ -321,14 +321,15 @@ export function RegistrationForm() {
               <div key={person.id} className="person-card">
                 <div className="person-card-top">
                   <span className="person-badge">คนที่ {index + 1}</span>
-                  <button
-                    type="button"
-                    className="btn-remove"
-                    onClick={() => removePerson(person.id)}
-                    disabled={people.length <= 1}
-                  >
-                    ลบ
-                  </button>
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      className="btn-remove"
+                      onClick={() => removePerson(person.id)}
+                    >
+                      ลบ
+                    </button>
+                  )}
                 </div>
                 <div>
                   <label className="field-label">ชื่อ-นามสกุล</label>
@@ -344,7 +345,11 @@ export function RegistrationForm() {
                 </div>
                 <div>
                   <label className="field-label">เลือกไซส์</label>
-                  <div className="size-btn-grid" role="group" aria-label="ไซส์เสื้อ">
+                  <div
+                    className="size-btn-grid"
+                    role="group"
+                    aria-label="ไซส์เสื้อ"
+                  >
                     {SHIRT_SIZES.map((s) => (
                       <button
                         key={s.code}
@@ -354,9 +359,13 @@ export function RegistrationForm() {
                           updatePerson(person.id, { size: s.code })
                         }
                         aria-pressed={person.size === s.code}
+                        title={
+                          s.chestInches
+                            ? `${s.code} รอบอก ${s.chestInches}"`
+                            : s.code
+                        }
                       >
-                        <strong>{s.code}</strong>
-                        {s.chestInches ? <span>{s.chestInches}&quot;</span> : null}
+                        {s.code}
                       </button>
                     ))}
                   </div>
@@ -366,6 +375,10 @@ export function RegistrationForm() {
                 </p>
               </div>
             ))}
+
+            <button type="button" className="btn-add-below" onClick={addPerson}>
+              + เพิ่มคนที่ {people.length + 1}
+            </button>
           </div>
 
           <div className="school-total-box">
