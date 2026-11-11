@@ -9,30 +9,37 @@ type Props = {
   label?: string;
 };
 
+/** แสดงเนื้อหาไว้ข้างใต้ตั้งแต่แรก แล้วค่อยเฟด loader ออก — รูปจะเริ่มโหลดทันที */
 export function PageEnter({
   children,
-  minMs = 700,
+  minMs = 650,
   label = "กำลังเปิดหน้า...",
 }: Props) {
-  const [ready, setReady] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
-    const show = window.setTimeout(() => setLeaving(true), minMs);
-    const done = window.setTimeout(() => setReady(true), minMs + 380);
+    const leave = window.setTimeout(() => setLeaving(true), minMs);
+    const hide = window.setTimeout(() => setShowLoader(false), minMs + 320);
     return () => {
-      window.clearTimeout(show);
-      window.clearTimeout(done);
+      window.clearTimeout(leave);
+      window.clearTimeout(hide);
     };
   }, [minMs]);
 
-  if (ready) {
-    return <div className="page-enter-content">{children}</div>;
-  }
-
   return (
-    <div className={`page-enter-shell${leaving ? " is-leaving" : ""}`}>
-      <PageLoader fullScreen label={label} />
+    <div className="page-enter-root">
+      <div className={`page-enter-content${showLoader ? " is-dimmed" : ""}`}>
+        {children}
+      </div>
+      {showLoader && (
+        <div
+          className={`page-enter-overlay${leaving ? " is-leaving" : ""}`}
+          aria-hidden={leaving}
+        >
+          <PageLoader fullScreen label={label} />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { SchoolSelect } from "@/components/SchoolSelect";
@@ -246,14 +245,16 @@ export function RegistrationForm() {
           onClick={() => setLightbox(true)}
           aria-label="รูปแบบเสื้อและขนาด (Size)"
         >
-          <Image
+          {/* ใช้ img ตรง ๆ เพื่อให้ภาพตัวอย่างโชว์แน่นอนทุกเบราว์เซอร์ */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/jersey.jpg"
             alt="เสื้อกีฬา VIP สพม.มุกดาหาร กีฬาศึกษาสัมพันธ์ 2569"
-            fill
-            priority
-            sizes="100vw"
-            className="anim-float"
-            style={{ objectFit: "cover", objectPosition: "center top" }}
+            className="hero-jersey-img"
+            width={1200}
+            height={1600}
+            decoding="async"
+            fetchPriority="high"
           />
         </button>
         <div className="hero-shade" />

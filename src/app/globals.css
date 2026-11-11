@@ -56,11 +56,25 @@ body {
   position: absolute;
   inset: 0;
   z-index: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    #2a151c
+    url("/jersey.jpg") center top / cover no-repeat;
 }
 
+.hero-jersey-img,
 .hero-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: center top;
+  pointer-events: none;
 }
 
 .hero-shade {
@@ -1788,20 +1802,28 @@ body {
   animation-delay: 0.3s;
 }
 
-.page-enter-shell {
+.page-enter-root {
+  position: relative;
   min-height: 100svh;
-  transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
-.page-enter-shell.is-leaving {
+.page-enter-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.page-enter-overlay.is-leaving {
   opacity: 0;
-  transform: scale(1.02);
+  visibility: hidden;
   pointer-events: none;
 }
 
 .page-enter-content {
   animation: page-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
 
 @keyframes loader-spin {
   to {
@@ -1861,7 +1883,7 @@ body {
   .page-loader-glow,
   .page-loader-dots i,
   .page-enter-content,
-  .page-enter-shell {
+  .page-enter-overlay {
     animation: none !important;
     transition: none !important;
   }
