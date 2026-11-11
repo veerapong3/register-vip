@@ -10,6 +10,7 @@ const HEADERS = [
   "เบอร์โทร",
   "ลำดับ",
   "ชื่อผู้สวมใส่",
+  "เบอร์หลังเสื้อ",
   "ไซส์",
   "รอบอก (นิ้ว)",
   "ราคา (บาท)",
@@ -38,6 +39,7 @@ export type SheetPersonRow = {
   contactPhone: string;
   index: number;
   personName: string;
+  jerseyNumber: string;
   size: string;
   chestInches: string;
   price: number;
@@ -70,7 +72,7 @@ export type AdminRegistration = {
   slipUrl: string;
   quantity: number;
   totalAmount: number;
-  people: { name: string; size: string }[];
+  people: { name: string; jerseyNumber: string; size: string }[];
 };
 
 export type AdminDashboard = {
@@ -90,19 +92,49 @@ export type AdminDashboard = {
   };
 };
 
+const SIZE_CODES = new Set(SHIRT_SIZES.map((s) => s.code));
+
+/** รองรับชีตแบบเก่า (ไม่มีคอลัมน์เบอร์หลังเสื้อ) และแบบใหม่ */
+function parsePersonFromRow(row: string[]) {
+  const personName = String(row[7] || "").trim();
+  const col8 = String(row[8] || "").trim();
+  const col9 = String(row[9] || "").trim();
+  const looksOld =
+    SIZE_CODES.has(col8) && !SIZE_CODES.has(col9) && row.length <= 15;
+  if (looksOld) {
+    return {
+      personName,
+      jerseyNumber: "",
+      size: col8,
+      slipUrl: String(row[13] || ""),
+      note: String(row[14] || ""),
+    };
+  }
+  return {
+    personName,
+    jerseyNumber: col8,
+    size: col9,
+    slipUrl: String(row[14] || ""),
+    note: String(row[15] || ""),
+  };
+}
+
 async function ensureHeaderRow() {
   const sheets = getSheetsClient();
   const spreadsheetId = getSheetId();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "A1:O1",
+    range: "A1:P1",
   });
-  const first = res.data.values?.[0]?.[0];
-  if (first === HEADERS[0]) return;
+  const header = res.data.values?.[0] || [];
+  const matches =
+    header.length >= HEADERS.length &&
+    HEADERS.every((h, i) => header[i] === h);
+  if (matches) return;
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: "A1:O1",
+    range: "A1:P1",
     valueInputOption: "RAW",
     requestBody: { values: [[...HEADERS]] },
   });
@@ -153,6 +185,7 @@ export async function appendRegistrationRows(rows: SheetPersonRow[]) {
     r.contactPhone,
     r.index,
     r.personName,
+    r.jerseyNumber,
     r.size,
     r.chestInches,
     r.price,
@@ -164,7 +197,7 @@ export async function appendRegistrationRows(rows: SheetPersonRow[]) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: "A:O",
+    range: "A:P",
     valueInputOption: "RAW",
     insertDataOption: "INSERT_ROWS",
     requestBody: { values },
@@ -208,7 +241,7 @@ export async function getSchoolOrderSummaries(): Promise<SchoolOrderSummary[]> {
   const [ordersRes, payRes] = await Promise.all([
     sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: "A2:O",
+      range: "A2:P",
     }),
     sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -245,7 +278,7 @@ export async function getSchoolOrderSummaries(): Promise<SchoolOrderSummary[]> {
     const schoolName = String(row[2] || "").trim();
     const schoolId = String(row[3] || "").trim() || schoolName;
     const registrationId = String(row[1] || "");
-    const size = String(row[8] || "").trim();
+    const { size } = parsePersonFromRow(row);
     if (!schoolName || !size) continue;
 
     let acc = bySchool.get(schoolId);
@@ -297,7 +330,7 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
   const spreadsheetId = getSheetId();
   const ordersRes = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "A2:O",
+    range: "A2:P",
   });
 
   const byReg = new Map<string, AdminRegistration>();
@@ -310,10 +343,8 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
     const schoolId = String(row[3] || "").trim() || schoolName;
     const contactName = String(row[4] || "");
     const contactPhone = String(row[5] || "");
-    const personName = String(row[7] || "").trim();
-    const size = String(row[8] || "").trim();
-    const slipUrl = String(row[13] || "");
-    const note = String(row[14] || "");
+    const { personName, jerseyNumber, size, slipUrl, note } =
+      parsePersonFromRow(row);
     if (!registrationId || !schoolName) continue;
 
     if (size) sizeTotals[size] = (sizeTotals[size] || 0) + 1;
@@ -336,7 +367,7 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
       byReg.set(registrationId, reg);
     }
     if (personName && size) {
-      reg.people.push({ name: personName, size });
+      reg.people.push({ name: personName, jerseyNumber, size });
       reg.quantity += 1;
       reg.totalAmount = reg.quantity * BASE_PRICE;
     }

@@ -8,7 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import type { School } from "@/lib/schools";
 import { BASE_PRICE, priceForSize, SHIRT_SIZES } from "@/lib/sizes";
 
-type Person = { id: string; name: string; size: string };
+type Person = { id: string; name: string; jerseyNumber: string; size: string };
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -25,7 +25,7 @@ export function RegistrationForm() {
   const [contactPhone, setContactPhone] = useState("");
   const [note, setNote] = useState("");
   const [people, setPeople] = useState<Person[]>([
-    { id: uid(), name: "", size: "L" },
+    { id: uid(), name: "", jerseyNumber: "", size: "L" },
   ]);
   const [slip, setSlip] = useState<File | null>(null);
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
@@ -67,7 +67,10 @@ export function RegistrationForm() {
   }
 
   function addPerson() {
-    setPeople((prev) => [...prev, { id: uid(), name: "", size: "L" }]);
+    setPeople((prev) => [
+      ...prev,
+      { id: uid(), name: "", jerseyNumber: "", size: "L" },
+    ]);
   }
 
   function removePerson(id: string) {
@@ -98,6 +101,10 @@ export function RegistrationForm() {
       setError("กรุณากรอกชื่อผู้สวมใส่ให้ครบ");
       return;
     }
+    if (people.some((p) => !p.jerseyNumber.trim())) {
+      setError("กรุณากรอกเบอร์หลังเสื้อให้ครบทุกคน");
+      return;
+    }
     if (!slip) {
       setError("กรุณาแนบสลิปการโอนเงิน");
       return;
@@ -120,7 +127,11 @@ export function RegistrationForm() {
       form.set(
         "people",
         JSON.stringify(
-          people.map((p) => ({ name: p.name.trim(), size: p.size })),
+          people.map((p) => ({
+            name: p.name.trim(),
+            jerseyNumber: p.jerseyNumber.trim(),
+            size: p.size,
+          })),
         ),
       );
       form.set("slip", slip);
@@ -179,7 +190,7 @@ export function RegistrationForm() {
               className="hero-cta"
               onClick={() => {
                 setSuccess(null);
-                setPeople([{ id: uid(), name: "", size: "L" }]);
+                setPeople([{ id: uid(), name: "", jerseyNumber: "", size: "L" }]);
                 setContactName("");
                 setContactPhone("");
                 setNote("");
@@ -316,7 +327,7 @@ export function RegistrationForm() {
             <span className="step-num">2</span>
             <div className="flex-1">
               <p className="step-kicker">รายชื่อเสื้อ</p>
-              <h2 className="step-title">เพิ่มรายชื่อและเลือกไซส์</h2>
+              <h2 className="step-title">เพิ่มรายชื่อ เบอร์หลังเสื้อ และไซส์</h2>
               <p className="step-desc mb-0">
                 กรอกคนที่ 1 ก่อน แล้วกดเพิ่มคนที่ 2, 3, 4… ด้านล่าง · ตัวละ{" "}
                 {BASE_PRICE}
@@ -348,17 +359,38 @@ export function RegistrationForm() {
                     </button>
                   )}
                 </div>
-                <div>
-                  <label className="field-label">ชื่อ-นามสกุล</label>
-                  <input
-                    className="field field-solid"
-                    value={person.name}
-                    onChange={(e) =>
-                      updatePerson(person.id, { name: e.target.value })
-                    }
-                    placeholder="ชื่อ-นามสกุล"
-                    required
-                  />
+                <div className="person-fields">
+                  <div>
+                    <label className="field-label">ชื่อ-นามสกุล</label>
+                    <input
+                      className="field field-solid"
+                      value={person.name}
+                      onChange={(e) =>
+                        updatePerson(person.id, { name: e.target.value })
+                      }
+                      placeholder="ชื่อ-นามสกุล"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="field-label">เบอร์หลังเสื้อ</label>
+                    <input
+                      className="field field-solid person-jersey"
+                      value={person.jerseyNumber}
+                      onChange={(e) =>
+                        updatePerson(person.id, {
+                          jerseyNumber: e.target.value
+                            .toUpperCase()
+                            .replace(/[^0-9A-Za-z]/g, "")
+                            .slice(0, 3),
+                        })
+                      }
+                      placeholder="เช่น 7, 10, 99"
+                      inputMode="numeric"
+                      maxLength={3}
+                      required
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="field-label">เลือกไซส์</label>
@@ -551,6 +583,17 @@ export function RegistrationForm() {
               <li>
                 <span>ไซส์</span>
                 <strong>{sizeSummaryText}</strong>
+              </li>
+              <li className="confirm-people">
+                <span>รายชื่อ / เบอร์</span>
+                <strong>
+                  {people
+                    .map(
+                      (p) =>
+                        `${p.name.trim() || "-"} (#${p.jerseyNumber.trim() || "-"} · ${p.size})`,
+                    )
+                    .join(" · ")}
+                </strong>
               </li>
               <li>
                 <span>ยอดโอน</span>

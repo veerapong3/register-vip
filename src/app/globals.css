@@ -287,6 +287,26 @@ body {
   animation: rise 0.35s ease both;
 }
 
+.person-fields {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 560px) {
+  .person-fields {
+    grid-template-columns: minmax(0, 1.5fr) minmax(7.5rem, 0.7fr);
+    align-items: end;
+  }
+}
+
+.person-jersey {
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-family: var(--font-oswald), "Oswald", sans-serif;
+  font-size: 1.15rem;
+}
+
 .person-card-top {
   display: flex;
   justify-content: space-between;

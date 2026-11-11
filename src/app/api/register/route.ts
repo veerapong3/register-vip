@@ -11,8 +11,16 @@ export const maxDuration = 60;
 
 type PersonInput = {
   name: string;
+  jerseyNumber: string;
   size: string;
 };
+
+function normalizeJerseyNumber(raw: string) {
+  return String(raw || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+}
 
 function bangkokTimestamp() {
   return new Intl.DateTimeFormat("sv-SE", {
@@ -109,10 +117,22 @@ export async function POST(req: Request) {
     const validCodes = new Set(SHIRT_SIZES.map((s) => s.code));
     const cleaned = people.map((p, i) => {
       const name = String(p?.name || "").trim().slice(0, 120);
+      const jerseyNumber = normalizeJerseyNumber(String(p?.jerseyNumber || "")).slice(
+        0,
+        3,
+      );
       const size = String(p?.size || "").trim();
       if (!name) throw new Error(`กรุณากรอกชื่อคนที่ ${i + 1}`);
+      if (!jerseyNumber) {
+        throw new Error(`กรุณากรอกเบอร์หลังเสื้อของคนที่ ${i + 1}`);
+      }
+      if (!/^[0-9A-Z]{1,3}$/.test(jerseyNumber)) {
+        throw new Error(
+          `เบอร์หลังเสื้อของคนที่ ${i + 1} ต้องเป็นตัวเลข/ตัวอักษร ไม่เกิน 3 ตัว`,
+        );
+      }
       if (!validCodes.has(size)) throw new Error(`ไซส์ของคนที่ ${i + 1} ไม่ถูกต้อง`);
-      return { name, size, price: priceForSize(size) };
+      return { name, jerseyNumber, size, price: priceForSize(size) };
     });
 
     if (!(slip instanceof File) || slip.size === 0) {
@@ -161,6 +181,7 @@ export async function POST(req: Request) {
           contactPhone,
           index: i + 1,
           personName: p.name,
+          jerseyNumber: p.jerseyNumber,
           size: p.size,
           chestInches: sizeMeta?.chestInches
             ? String(sizeMeta.chestInches)

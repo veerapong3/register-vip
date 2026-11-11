@@ -31,7 +31,7 @@ type Registration = {
   slipUrl: string;
   quantity: number;
   totalAmount: number;
-  people: { name: string; size: string }[];
+  people: { name: string; jerseyNumber: string; size: string }[];
 };
 
 type Totals = {
@@ -199,6 +199,7 @@ export default function AdminPage() {
           r.contactPhone,
           i + 1,
           p.name,
+          p.jerseyNumber || "",
           p.size,
           BASE_PRICE,
           r.slipUrl,
@@ -217,6 +218,7 @@ export default function AdminPage() {
         "เบอร์โทร",
         "ลำดับ",
         "ชื่อผู้สวมใส่",
+        "เบอร์หลังเสื้อ",
         "ไซส์",
         "ราคา",
         "ลิงก์สลิป",
@@ -574,7 +576,10 @@ export default function AdminPage() {
                         </p>
                         <p className="admin-meta">
                           {o.people
-                            .map((p) => `${p.name} (${p.size})`)
+                            .map(
+                              (p) =>
+                                `${p.name} #${p.jerseyNumber || "-"} (${p.size})`,
+                            )
                             .join(" · ")}
                         </p>
                         {safeSlipHref(o.slipUrl) && (
@@ -671,7 +676,8 @@ export default function AdminPage() {
               <ul className="admin-people">
                 {r.people.map((p, i) => (
                   <li key={`${r.registrationId}-${i}`}>
-                    {i + 1}. {p.name} · ไซส์ {p.size} · {BASE_PRICE} ฿
+                    {i + 1}. {p.name} · เบอร์ {p.jerseyNumber || "-"} · ไซส์{" "}
+                    {p.size} · {BASE_PRICE} ฿
                   </li>
                 ))}
               </ul>
