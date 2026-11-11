@@ -12,7 +12,7 @@ export function SiteFooter({ compact = false }: Props) {
           <p className="site-footer-kicker">VIP SESAO MUK 2569</p>
           <h3>โรงเรียนดอนตาลวิทยา × สพม.มุกดาหาร</h3>
           <p>
-            ลงทะเบียนเสื้อกีฬาฟุตบอล VIP กีฬาสัมพันธ์ประจำปี 2569
+            ลงทะเบียนเสื้อกีฬาฟุตบอล VIP กีฬาศึกษาสัมพันธ์ประจำปี 2569
           </p>
         </div>
 

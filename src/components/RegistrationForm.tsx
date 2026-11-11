@@ -248,7 +248,7 @@ export function RegistrationForm() {
         >
           <Image
             src="/jersey.jpg"
-            alt="เสื้อกีฬา VIP สพม.มุกดาหาร กีฬาสัมพันธ์ 2569"
+            alt="เสื้อกีฬา VIP สพม.มุกดาหาร กีฬาศึกษาสัมพันธ์ 2569"
             fill
             priority
             sizes="100vw"
@@ -259,7 +259,7 @@ export function RegistrationForm() {
         <div className="hero-shade" />
         <div className="hero-content">
           <p className="anim-fade text-sm font-medium tracking-[0.2em] text-white/80 uppercase">
-            สพม.มุกดาหาร · กีฬาสัมพันธ์ 2569
+            สพม.มุกดาหาร · กีฬาศึกษาสัมพันธ์ 2569
           </p>
           <h1 className="brand anim-fade anim-delay-1">VIP SESAO MUK</h1>
           <p className="hero-line anim-fade anim-delay-2">
