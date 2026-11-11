@@ -352,6 +352,7 @@ export default function AdminPage() {
             type="button"
             className="btn-ghost"
             onClick={() => {
+              sessionStorage.removeItem("vip-admin-user");
               sessionStorage.removeItem("vip-admin-pass");
               setAuthed(false);
             }}
