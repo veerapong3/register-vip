@@ -40,7 +40,7 @@ export function SchoolSelect({ value, onChange }: Props) {
         }}
         placeholder="พิมพ์ค้นหาชื่อโรงเรียน..."
         autoComplete="off"
-        className="field"
+        className="field field-solid"
         required={!value}
       />
       {open && (
