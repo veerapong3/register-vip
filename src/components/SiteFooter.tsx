@@ -17,18 +17,26 @@ export function SiteFooter({ compact = false }: Props) {
         </div>
 
         <div className="site-footer-grid">
-          <div>
+          <div className="site-footer-block site-footer-people">
             <p className="site-footer-label">ผู้ประสานงาน</p>
-            <p className="site-footer-value">ผอ.บุญเลี่ยม บุญศรี</p>
-            <p className="site-footer-value">รองฯ วีระพงศ์ ตะโกนอก</p>
+            <ul className="site-footer-people-list">
+              <li>
+                <span className="site-footer-role">ผู้อำนวยการ</span>
+                <strong className="site-footer-value">บุญเลี่ยม บุญศรี</strong>
+              </li>
+              <li>
+                <span className="site-footer-role">รองผู้อำนวยการ</span>
+                <strong className="site-footer-value">วีระพงศ์ ตะโกนอก</strong>
+              </li>
+            </ul>
           </div>
-          <div>
+          <div className="site-footer-block">
             <p className="site-footer-label">ติดต่อ</p>
             <a className="site-footer-link" href="tel:0879463192">
               087-946-3192
             </a>
           </div>
-          <div>
+          <div className="site-footer-block">
             <p className="site-footer-label">เมนู</p>
             <div className="site-footer-links">
               <Link href="/">ลงทะเบียน</Link>
