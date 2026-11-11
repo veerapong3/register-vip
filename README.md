@@ -25,3 +25,9 @@ npm run dev
 ## Deploy
 
 Push ไป GitHub แล้วเชื่อม Vercel — ใส่ Environment Variables ให้ครบตาม `.env.example`
+
+## ความปลอดภัย (repo เป็น public)
+
+- ห้าม commit `.env.local` / private key / OAuth client secret / refresh token
+- ค่า Google Sheet ID, Drive folder ID, และ credential ใส่เฉพาะใน Vercel Environment Variables
+- เลขบัญชีโอนเงินเป็นข้อมูลสาธารณะบนหน้าเว็บโดยตั้งใจ
