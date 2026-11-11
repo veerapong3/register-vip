@@ -64,7 +64,22 @@ export async function uploadSlip(params: {
   const fileId = res.data.id;
   if (!fileId) throw new Error("อัปโหลดสลิปไม่สำเร็จ");
 
-  // ไม่เปิด anyone/public — ให้เฉพาะเจ้าของโฟลเดอร์และผู้ที่ถูกแชร์โฟลเดอร์ดูได้
+  // เปิดAnyone with the link (reader) ให้แอดมินเปิดดูสลิปได้โดยไม่ต้อง login Google
+  try {
+    await drive.permissions.create({
+      fileId,
+      requestBody: {
+        role: "reader",
+        type: "anyone",
+        allowFileDiscovery: false,
+      },
+      sendNotificationEmail: false,
+      supportsAllDrives: true,
+    });
+  } catch (err) {
+    console.error("[drive] share anyone failed", err);
+  }
+
   return {
     fileId,
     fileName: res.data.name || name,
