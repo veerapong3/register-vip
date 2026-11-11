@@ -17,11 +17,12 @@ function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "พร้อมเพย์ / บัญชีโรงเรียน";
+const bankName =
+  process.env.NEXT_PUBLIC_BANK_NAME || "ธนาคารไทยพาณิชย์";
 const bankAccount =
-  process.env.NEXT_PUBLIC_BANK_ACCOUNT || "กรุณาตรวจสอบกับผู้จัด";
+  process.env.NEXT_PUBLIC_BANK_ACCOUNT || "418-002259-4";
 const bankHolder =
-  process.env.NEXT_PUBLIC_BANK_HOLDER || "academic@dontanwit.ac.th";
+  process.env.NEXT_PUBLIC_BANK_HOLDER || "นายวีระพงศ์ ตะโกนอก";
 
 export function RegistrationForm() {
   const [school, setSchool] = useState<School | null>(null);
