@@ -8,6 +8,7 @@ import { BASE_PRICE, SHIRT_SIZES } from "@/lib/sizes";
 type SchoolSummary = {
   schoolId: string;
   schoolName: string;
+  contactName?: string;
   totalQty: number;
   sizes: Record<string, number>;
   paymentStatus: "รอตรวจสอบ" | "ชำระแล้ว" | "ไม่ครบ/มีปัญหา";
@@ -22,6 +23,7 @@ type SummaryResponse = {
     schools: number;
     shirts: number;
     paidShirts: number;
+    paidSchools: number;
     pendingSchools: number;
   };
 };
@@ -30,6 +32,12 @@ function statusClass(status: string) {
   if (status === "ชำระแล้ว") return "status-paid";
   if (status === "ไม่ครบ/มีปัญหา") return "status-issue";
   return "status-pending";
+}
+
+function cardToneClass(status: string) {
+  if (status === "ชำระแล้ว") return "is-paid";
+  if (status === "ไม่ครบ/มีปัญหา") return "is-issue";
+  return "is-pending";
 }
 
 export default function SummaryPage() {
@@ -103,8 +111,12 @@ export default function SummaryPage() {
               <span>เสื้อทั้งหมด</span>
               <strong>{data.totals.shirts} ตัว</strong>
             </div>
-            <div>
-              <span>รอตรวจชำระ</span>
+            <div className="kpi-paid">
+              <span>ชำระแล้ว</span>
+              <strong>{data.totals.paidSchools} รร.</strong>
+            </div>
+            <div className="kpi-pending">
+              <span>รอชำระ</span>
               <strong>{data.totals.pendingSchools} รร.</strong>
             </div>
           </div>
@@ -130,13 +142,23 @@ export default function SummaryPage() {
 
           <div className="summary-list">
             {(data.schools || []).map((school) => (
-              <article key={school.schoolId} className="summary-card">
+              <article
+                key={school.schoolId}
+                className={`summary-card admin-card ${cardToneClass(school.paymentStatus)}`}
+              >
                 <div className="summary-card-head">
                   <h2>{school.schoolName}</h2>
-                  <span className={`status-badge ${statusClass(school.paymentStatus)}`}>
+                  <span
+                    className={`status-badge ${statusClass(school.paymentStatus)}`}
+                  >
                     {school.paymentStatus}
                   </span>
                 </div>
+                {school.contactName ? (
+                  <p className="summary-contact">
+                    ผู้ประสานงาน · {school.contactName}
+                  </p>
+                ) : null}
                 <p className="summary-amount">{school.totalQty} ตัว</p>
                 <div className="size-guide">
                   {Object.entries(school.sizes).map(([size, qty]) => (

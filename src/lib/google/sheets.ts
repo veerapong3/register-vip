@@ -52,6 +52,7 @@ export type SheetPersonRow = {
 export type SchoolOrderSummary = {
   schoolId: string;
   schoolName: string;
+  contactName: string;
   totalQty: number;
   totalAmount: number;
   sizes: Record<string, number>;
@@ -267,6 +268,7 @@ export async function getSchoolOrderSummaries(): Promise<SchoolOrderSummary[]> {
   type Acc = {
     schoolId: string;
     schoolName: string;
+    contactName: string;
     totalQty: number;
     sizes: Record<string, number>;
     registrationIds: Set<string>;
@@ -278,6 +280,7 @@ export async function getSchoolOrderSummaries(): Promise<SchoolOrderSummary[]> {
     const schoolName = String(row[2] || "").trim();
     const schoolId = String(row[3] || "").trim() || schoolName;
     const registrationId = String(row[1] || "");
+    const contactName = String(row[4] || "").trim();
     const { size } = parsePersonFromRow(row);
     if (!schoolName || !size) continue;
 
@@ -286,12 +289,14 @@ export async function getSchoolOrderSummaries(): Promise<SchoolOrderSummary[]> {
       acc = {
         schoolId,
         schoolName,
+        contactName,
         totalQty: 0,
         sizes: {},
         registrationIds: new Set(),
       };
       bySchool.set(schoolId, acc);
     }
+    if (!acc.contactName && contactName) acc.contactName = contactName;
     acc.totalQty += 1;
     acc.sizes[size] = (acc.sizes[size] || 0) + 1;
     if (registrationId) acc.registrationIds.add(registrationId);
@@ -312,6 +317,7 @@ export async function getSchoolOrderSummaries(): Promise<SchoolOrderSummary[]> {
       return {
         schoolId: acc.schoolId,
         schoolName: acc.schoolName,
+        contactName: acc.contactName,
         totalQty: acc.totalQty,
         totalAmount: acc.totalQty * BASE_PRICE,
         sizes: orderedSizes,

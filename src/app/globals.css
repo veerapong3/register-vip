@@ -1432,6 +1432,24 @@ body {
   border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
 }
 
+.summary-kpis > .kpi-paid {
+  background: linear-gradient(160deg, #f3fbf6, #dff5e8);
+  border-color: #8fd0ab;
+}
+
+.summary-kpis > .kpi-pending {
+  background: linear-gradient(160deg, #fffaf3, #fff1db);
+  border-color: #efc48a;
+}
+
+.summary-kpis > .kpi-paid strong {
+  color: #0f7a3c;
+}
+
+.summary-kpis > .kpi-pending strong {
+  color: #9a5b00;
+}
+
 .summary-kpis span {
   display: block;
   font-size: 0.78rem;
@@ -1442,6 +1460,14 @@ body {
   display: block;
   margin-top: 0.25rem;
   font-size: 1.2rem;
+}
+
+.summary-contact {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
 }
 
 .summary-size-box {

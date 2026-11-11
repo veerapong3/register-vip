@@ -11,12 +11,19 @@ export async function GET() {
     const publicSchools = schools.map((s) => ({
       schoolId: s.schoolId,
       schoolName: s.schoolName,
+      contactName: s.contactName || "",
       totalQty: s.totalQty,
       sizes: s.sizes,
       paymentStatus: s.paymentStatus,
       updatedAt: s.updatedAt,
     }));
     const totalQty = publicSchools.reduce((sum, x) => sum + x.totalQty, 0);
+    const paidSchools = schools.filter(
+      (x) => x.paymentStatus === "ชำระแล้ว",
+    ).length;
+    const pendingSchools = schools.filter(
+      (x) => x.paymentStatus !== "ชำระแล้ว",
+    ).length;
     const paidQty = schools
       .filter((x) => x.paymentStatus === "ชำระแล้ว")
       .reduce((s, x) => s + x.totalQty, 0);
@@ -28,8 +35,8 @@ export async function GET() {
         schools: publicSchools.length,
         shirts: totalQty,
         paidShirts: paidQty,
-        pendingSchools: schools.filter((x) => x.paymentStatus !== "ชำระแล้ว")
-          .length,
+        paidSchools,
+        pendingSchools,
       },
     });
   } catch (err) {
