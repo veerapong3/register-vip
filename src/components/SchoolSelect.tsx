@@ -25,12 +25,10 @@ export function SchoolSelect({ value, onChange }: Props) {
 
   return (
     <div ref={rootRef} className="relative">
-      <label className="mb-1.5 block text-sm font-medium text-[var(--ink)]">
-        โรงเรียน (สพม.มุกดาหาร)
-      </label>
+      <label className="field-label">โรงเรียนใน สพม.มุกดาหาร</label>
       <input
         type="text"
-        value={open ? query : value?.name ?? query}
+        value={open ? query : (value?.name ?? query)}
         onChange={(e) => {
           setQuery(e.target.value);
           setOpen(true);
@@ -47,31 +45,26 @@ export function SchoolSelect({ value, onChange }: Props) {
       />
       {value && (
         <p className="mt-1 text-xs text-[var(--muted)]">
-          อ.{value.district} · รหัส {value.id}
+          อำเภอ{value.district}
         </p>
       )}
       {open && (
-        <ul className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-[var(--line)] bg-white shadow-lg">
+        <ul className="school-menu">
           {results.length === 0 ? (
-            <li className="px-3 py-3 text-sm text-[var(--muted)]">
-              ไม่พบโรงเรียน
-            </li>
+            <li className="px-4 py-3 text-sm text-[var(--muted)]">ไม่พบโรงเรียน</li>
           ) : (
             results.map((s) => (
               <li key={s.id}>
                 <button
                   type="button"
-                  className="flex w-full flex-col items-start gap-0.5 px-3 py-2.5 text-left hover:bg-[var(--pink-soft)]"
                   onClick={() => {
                     onChange(s);
                     setQuery(s.name);
                     setOpen(false);
                   }}
                 >
-                  <span className="text-sm font-medium text-[var(--ink)]">
-                    {s.name}
-                  </span>
-                  <span className="text-xs text-[var(--muted)]">
+                  <span className="block text-sm font-medium">{s.name}</span>
+                  <span className="block text-xs text-[var(--muted)]">
                     อ.{s.district}
                   </span>
                 </button>

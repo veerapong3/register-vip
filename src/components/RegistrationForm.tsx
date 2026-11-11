@@ -17,10 +17,8 @@ function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-const bankName =
-  process.env.NEXT_PUBLIC_BANK_NAME || "ธนาคารไทยพาณิชย์";
-const bankAccount =
-  process.env.NEXT_PUBLIC_BANK_ACCOUNT || "418-002259-4";
+const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "ธนาคารไทยพาณิชย์";
+const bankAccount = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "418-002259-4";
 const bankHolder =
   process.env.NEXT_PUBLIC_BANK_HOLDER || "นายวีระพงศ์ ตะโกนอก";
 
@@ -42,10 +40,7 @@ export function RegistrationForm() {
     totalAmount: number;
   } | null>(null);
 
-  const total = useMemo(
-    () => people.reduce((sum, p) => sum + priceForSize(p.size), 0),
-    [people],
-  );
+  const total = useMemo(() => people.length * BASE_PRICE, [people.length]);
 
   function updatePerson(id: string, patch: Partial<Person>) {
     setPeople((prev) =>
@@ -58,7 +53,9 @@ export function RegistrationForm() {
   }
 
   function removePerson(id: string) {
-    setPeople((prev) => (prev.length <= 1 ? prev : prev.filter((p) => p.id !== id)));
+    setPeople((prev) =>
+      prev.length <= 1 ? prev : prev.filter((p) => p.id !== id),
+    );
   }
 
   function onSlipChange(file: File | null) {
@@ -113,6 +110,7 @@ export function RegistrationForm() {
         quantity: data.quantity!,
         totalAmount: data.totalAmount!,
       });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
@@ -122,281 +120,264 @@ export function RegistrationForm() {
 
   if (success) {
     return (
-      <section className="panel success-panel animate-rise">
-        <p className="eyebrow">ลงทะเบียนสำเร็จ</p>
-        <h2 className="font-display text-3xl text-[var(--ink)]">
-          ขอบคุณที่สั่งจองเสื้อ VIP
-        </h2>
-        <p className="mt-2 text-[var(--muted)]">
-          รหัสรายการ{" "}
-          <span className="font-semibold text-[var(--brown)]">
-            {success.registrationId}
-          </span>
-        </p>
-        <dl className="mt-6 grid gap-3 sm:grid-cols-2">
-          <div className="stat">
-            <dt>จำนวนเสื้อ</dt>
-            <dd>{success.quantity} ตัว</dd>
+      <div className="success-wrap">
+        <div className="anim-fade">
+          <p className="step-kicker">ลงทะเบียนสำเร็จ</p>
+          <h1 className="font-display">ขอบคุณครับ</h1>
+          <p className="text-[var(--muted)]">
+            รหัสรายการ{" "}
+            <strong className="text-[var(--ink)]">{success.registrationId}</strong>
+          </p>
+          <div className="success-meta">
+            <div>
+              <span className="text-[var(--muted)]">จำนวนเสื้อ</span>
+              <strong>{success.quantity} ตัว</strong>
+            </div>
+            <div>
+              <span className="text-[var(--muted)]">ยอดชำระ</span>
+              <strong>
+                {success.totalAmount.toLocaleString("th-TH")} บาท
+              </strong>
+            </div>
           </div>
-          <div className="stat">
-            <dt>ยอดชำระ</dt>
-            <dd>{success.totalAmount.toLocaleString("th-TH")} บาท</dd>
-          </div>
-        </dl>
-        <button
-          type="button"
-          className="btn-primary mt-8"
-          onClick={() => {
-            setSuccess(null);
-            setPeople([{ id: uid(), name: "", size: "L" }]);
-            setContactName("");
-            setContactPhone("");
-            setNote("");
-            setSchool(null);
-            onSlipChange(null);
-          }}
-        >
-          ลงทะเบียนรายการใหม่
-        </button>
-      </section>
+          <button
+            type="button"
+            className="hero-cta mt-8"
+            onClick={() => {
+              setSuccess(null);
+              setPeople([{ id: uid(), name: "", size: "L" }]);
+              setContactName("");
+              setContactPhone("");
+              setNote("");
+              setSchool(null);
+              onSlipChange(null);
+            }}
+          >
+            ลงทะเบียนรายการใหม่
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <section className="panel animate-rise">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-          <div className="relative w-full overflow-hidden rounded-2xl lg:w-[42%]">
-            <Image
-              src="/jersey.jpg"
-              alt="เสื้อกีฬา VIP สพม.มุกดาหาร กีฬาสัมพันธ์ 2569"
-              width={900}
-              height={1100}
-              className="h-auto w-full object-cover"
-              priority
-            />
-          </div>
-          <div className="flex-1">
-            <p className="eyebrow">VIP Football · SESAO Mukdahan</p>
-            <h2 className="font-display text-3xl leading-tight text-[var(--ink)] sm:text-4xl">
-              ลงทะเบียนเสื้อกีฬาสัมพันธ์
-              <span className="block text-[var(--pink-deep)]">ประจำปี 2569</span>
-            </h2>
-            <p className="mt-3 max-w-xl text-[var(--muted)]">
-              เลือกโรงเรียน เพิ่มรายชื่อพร้อมไซส์เสื้อ คำนวณราคาอัตโนมัติ
-              และแนบสลิปโอนเงินในขั้นตอนเดียว
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3 text-sm">
-              <span className="chip">ตัวละ {BASE_PRICE} บาท</span>
-              <span className="chip">ไซส์พิเศษมีค่าเพิ่ม</span>
-              <span className="chip">30 โรงเรียน สพม.มุกดาหาร</span>
+    <>
+      <section className="hero">
+        <div className="hero-media">
+          <Image
+            src="/jersey.jpg"
+            alt="เสื้อกีฬา VIP สพม.มุกดาหาร กีฬาสัมพันธ์ 2569"
+            fill
+            priority
+            sizes="100vw"
+            className="anim-float"
+            style={{ objectFit: "cover", objectPosition: "center top" }}
+          />
+        </div>
+        <div className="hero-shade" />
+        <div className="hero-content">
+          <p className="anim-fade text-sm font-medium tracking-[0.2em] text-white/80 uppercase">
+            สพม.มุกดาหาร · กีฬาสัมพันธ์ 2569
+          </p>
+          <h1 className="brand anim-fade anim-delay-1">VIP SESAO MUK</h1>
+          <p className="hero-line anim-fade anim-delay-2">
+            ลงทะเบียนเสื้อกีฬาฟุตบอล VIP — เลือกโรงเรียน เพิ่มรายชื่อ
+            เลือกไซส์ แล้วแนบสลิปโอนเงิน
+          </p>
+          <p className="price-tag anim-fade anim-delay-2">
+            ราคาเท่ากันทุกไซส์ · {BASE_PRICE} บาท / ตัว
+          </p>
+          <a href="#register" className="hero-cta anim-fade anim-delay-3">
+            เริ่มลงทะเบียน
+          </a>
+        </div>
+      </section>
+
+      <form id="register" onSubmit={onSubmit} className="shell">
+        <section className="step">
+          <p className="step-kicker">Step 01</p>
+          <h2 className="step-title">เลือกโรงเรียน</h2>
+          <p className="step-desc">
+            ค้นหาจาก 30 โรงเรียนในสังกัด สพม.มุกดาหาร
+          </p>
+          <SchoolSelect value={school} onChange={setSchool} />
+          <div className="grid-2 mt-6">
+            <div>
+              <label className="field-label">ผู้ประสานงาน</label>
+              <input
+                className="field"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                placeholder="ชื่อ-นามสกุล"
+                required
+              />
+            </div>
+            <div>
+              <label className="field-label">เบอร์โทร</label>
+              <input
+                className="field"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="08x-xxx-xxxx"
+                inputMode="tel"
+                required
+              />
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="panel animate-rise delay-1">
-        <h3 className="section-title">1. เลือกโรงเรียน</h3>
-        <SchoolSelect value={school} onChange={setSchool} />
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">ผู้ประสานงาน</label>
-            <input
-              className="field"
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
-              placeholder="ชื่อ-นามสกุล"
-              required
-            />
+        <section className="step">
+          <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="step-kicker">Step 02</p>
+              <h2 className="step-title">รายชื่อและไซส์เสื้อ</h2>
+              <p className="step-desc mb-0">
+                เพิ่มรายชื่อได้เรื่อยๆ · ทุกตัวราคา {BASE_PRICE} บาท
+              </p>
+            </div>
+            <button type="button" className="btn-ghost" onClick={addPerson}>
+              + เพิ่มรายชื่อ
+            </button>
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">เบอร์โทร</label>
-            <input
-              className="field"
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
-              placeholder="08x-xxx-xxxx"
-              inputMode="tel"
-              required
-            />
+
+          <div className="size-guide" aria-label="ตารางไซส์">
+            {SHIRT_SIZES.filter((s) => s.chestInches).map((s) => (
+              <div key={s.code} className="size-pill">
+                <strong>{s.code}</strong>
+                <span>{s.chestInches}&quot;</span>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
 
-      <section className="panel animate-rise delay-2">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h3 className="section-title">2. รายชื่อผู้สวมใส่และไซส์</h3>
-            <p className="text-sm text-[var(--muted)]">
-              กดเพิ่มรายชื่อได้ตามต้องการ · ราคาคำนวณตามไซส์ทันที
-            </p>
+            {people.map((person, index) => (
+              <div key={person.id} className="person-row">
+                <div>
+                  <label className="field-label">คนที่ {index + 1}</label>
+                  <input
+                    className="field"
+                    value={person.name}
+                    onChange={(e) =>
+                      updatePerson(person.id, { name: e.target.value })
+                    }
+                    placeholder="ชื่อ-นามสกุล"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="field-label">ไซส์</label>
+                  <select
+                    className="field"
+                    value={person.size}
+                    onChange={(e) =>
+                      updatePerson(person.id, { size: e.target.value })
+                    }
+                    required
+                  >
+                    {SHIRT_SIZES.map((s) => (
+                      <option key={s.code} value={s.code}>
+                        {formatSizeLabel(s)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:pb-2">
+                  <span className="text-sm font-semibold text-[var(--pink-deep)]">
+                    {priceForSize(person.size).toLocaleString("th-TH")} ฿
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-danger"
+                    onClick={() => removePerson(person.id)}
+                    disabled={people.length <= 1}
+                  >
+                    ลบ
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-          <button type="button" className="btn-secondary" onClick={addPerson}>
-            + เพิ่มรายชื่อ
-          </button>
-        </div>
+        </section>
 
-        <div className="mb-5 overflow-x-auto rounded-xl border border-[var(--line)]">
-          <table className="size-table">
-            <thead>
-              <tr>
-                <th>ไซส์</th>
-                {SHIRT_SIZES.filter((s) => s.chestInches).map((s) => (
-                  <th key={s.code}>{s.code}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>รอบอก (นิ้ว)</td>
-                {SHIRT_SIZES.filter((s) => s.chestInches).map((s) => (
-                  <td key={s.code}>{s.chestInches}</td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <section className="step">
+          <p className="step-kicker">Step 03</p>
+          <h2 className="step-title">โอนเงินและแนบสลิป</h2>
+          <p className="step-desc">
+            โอนตามยอดรวม แล้วอัปโหลดสลิปเพื่อยืนยันการลงทะเบียน
+          </p>
 
-        <div className="space-y-3">
-          {people.map((person, index) => (
-            <div
-              key={person.id}
-              className="grid gap-3 rounded-xl border border-[var(--line)] bg-white/70 p-3 sm:grid-cols-[2.2fr_1.4fr_auto] sm:items-end"
-            >
-              <div>
-                <label className="mb-1 block text-xs font-medium text-[var(--muted)]">
-                  คนที่ {index + 1}
-                </label>
-                <input
-                  className="field"
-                  value={person.name}
-                  onChange={(e) =>
-                    updatePerson(person.id, { name: e.target.value })
-                  }
-                  placeholder="ชื่อ-นามสกุล"
-                  required
+          <div className="pay-block">
+            <div>
+              <ul className="account-list">
+                <li>
+                  <span>ธนาคาร</span>
+                  <strong>{bankName}</strong>
+                </li>
+                <li>
+                  <span>เลขบัญชี</span>
+                  <strong>{bankAccount}</strong>
+                </li>
+                <li>
+                  <span>ชื่อบัญชี</span>
+                  <strong>{bankHolder}</strong>
+                </li>
+                <li>
+                  <span>ยอดที่ต้องโอน</span>
+                  <strong className="text-[var(--pink-deep)]">
+                    {total.toLocaleString("th-TH")} บาท
+                  </strong>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <label className="field-label">อัปโหลดสลิปโอนเงิน</label>
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                className="field"
+                onChange={(e) => onSlipChange(e.target.files?.[0] ?? null)}
+                required
+              />
+              {slipPreview && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={slipPreview}
+                  alt="ตัวอย่างสลิป"
+                  className="slip-preview"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-[var(--muted)]">
-                  ไซส์
-                </label>
-                <select
-                  className="field"
-                  value={person.size}
-                  onChange={(e) =>
-                    updatePerson(person.id, { size: e.target.value })
-                  }
-                  required
-                >
-                  {SHIRT_SIZES.map((s) => (
-                    <option key={s.code} value={s.code}>
-                      {formatSizeLabel(s)} · {priceForSize(s.code)}฿
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-end">
-                <span className="text-sm font-semibold text-[var(--brown)]">
-                  {priceForSize(person.size).toLocaleString("th-TH")} ฿
-                </span>
-                <button
-                  type="button"
-                  className="text-sm text-red-700 hover:underline disabled:opacity-40"
-                  onClick={() => removePerson(person.id)}
-                  disabled={people.length <= 1}
-                >
-                  ลบ
-                </button>
-              </div>
+              )}
+              <label className="field-label mt-5">หมายเหตุ (ถ้ามี)</label>
+              <textarea
+                className="field min-h-[88px]"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="เช่น โอนจากบัญชีชื่อ..."
+              />
             </div>
-          ))}
-        </div>
+          </div>
+        </section>
 
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[var(--pink-deep)] px-5 py-4 text-white">
+        {error && <div className="error-box">{error}</div>}
+
+        <div className="total-bar">
           <div>
-            <p className="text-sm text-white/80">ยอดรวมทั้งหมด</p>
-            <p className="font-display text-3xl">
+            <p className="m-0 text-sm text-white/80">
+              {people.length} ตัว × {BASE_PRICE} บาท
+            </p>
+            <p className="amount m-0 mt-1">
               {total.toLocaleString("th-TH")} บาท
             </p>
           </div>
-          <p className="text-sm text-white/85">
-            {people.length} ตัว · ฐาน {BASE_PRICE}฿ + ค่าไซส์พิเศษ
-          </p>
+          <button type="submit" className="btn-submit" disabled={submitting}>
+            {submitting ? "กำลังบันทึก..." : "ยืนยันลงทะเบียน"}
+          </button>
         </div>
-      </section>
 
-      <section className="panel animate-rise delay-3">
-        <h3 className="section-title">3. โอนเงินและแนบสลิป</h3>
-        <div className="grid gap-5 lg:grid-cols-2">
-          <div className="rounded-2xl border border-dashed border-[var(--brown)]/40 bg-[var(--pink-soft)]/50 p-4">
-            <p className="text-sm font-medium text-[var(--ink)]">ช่องทางชำระเงิน</p>
-            <dl className="mt-3 space-y-2 text-sm">
-              <div className="flex justify-between gap-3">
-                <dt className="text-[var(--muted)]">ธนาคาร / ช่องทาง</dt>
-                <dd className="font-medium">{bankName}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-[var(--muted)]">เลขบัญชี</dt>
-                <dd className="font-medium">{bankAccount}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-[var(--muted)]">ชื่อบัญชี</dt>
-                <dd className="font-medium text-right">{bankHolder}</dd>
-              </div>
-              <div className="flex justify-between gap-3 border-t border-[var(--line)] pt-2">
-                <dt className="text-[var(--muted)]">ยอดที่ต้องโอน</dt>
-                <dd className="text-lg font-semibold text-[var(--pink-deep)]">
-                  {total.toLocaleString("th-TH")} บาท
-                </dd>
-              </div>
-            </dl>
-            <p className="mt-3 text-xs text-[var(--muted)]">
-              ติดต่อยืนยัน: {bankHolder}
-            </p>
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">
-              อัปโหลดสลิปโอนเงิน
-            </label>
-            <input
-              type="file"
-              accept="image/*,.pdf"
-              className="field file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--pink-soft)] file:px-3 file:py-1.5 file:text-sm file:font-medium"
-              onChange={(e) => onSlipChange(e.target.files?.[0] ?? null)}
-              required
-            />
-            {slipPreview && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={slipPreview}
-                alt="ตัวอย่างสลิป"
-                className="mt-3 max-h-48 rounded-xl border border-[var(--line)] object-contain"
-              />
-            )}
-            <label className="mb-1.5 mt-4 block text-sm font-medium">
-              หมายเหตุ (ถ้ามี)
-            </label>
-            <textarea
-              className="field min-h-[88px]"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="เช่น โอนจากบัญชีชื่อ..."
-            />
-          </div>
-        </div>
-      </section>
-
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </div>
-      )}
-
-      <button type="submit" className="btn-primary w-full sm:w-auto" disabled={submitting}>
-        {submitting ? "กำลังบันทึก..." : `ยืนยันลงทะเบียน · ${total.toLocaleString("th-TH")} บาท`}
-      </button>
-    </form>
+        <footer className="footer">
+          สอบถาม · academic@dontanwit.ac.th · YO SPORT × สพม.มุกดาหาร
+        </footer>
+      </form>
+    </>
   );
 }

@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Sarabun } from "next/font/google";
+import { Kanit, Oswald } from "next/font/google";
 import "./globals.css";
 
-const sarabun = Sarabun({
-  variable: "--font-sarabun",
+const kanit = Kanit({
+  variable: "--font-kanit",
   subsets: ["thai", "latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const bebas = Bebas_Neue({
-  variable: "--font-bebas",
+const oswald = Oswald({
+  variable: "--font-oswald",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
   title: "ลงทะเบียนเสื้อ VIP · สพม.มุกดาหาร กีฬาสัมพันธ์ 2569",
   description:
-    "ระบบลงทะเบียนสั่งจองเสื้อกีฬา VIP ฟุตบอล กีฬาสัมพันธ์ ประจำปี 2569 จังหวัดมุกดาหาร",
+    "สั่งจองเสื้อกีฬา VIP ฟุตบอล กีฬาสัมพันธ์ ประจำปี 2569 จังหวัดมุกดาหาร ตัวละ 250 บาท",
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" className={`${sarabun.variable} ${bebas.variable} h-full`}>
+    <html lang="th" className={`${kanit.variable} ${oswald.variable} h-full`}>
       <body className="min-h-full antialiased">{children}</body>
     </html>
   );
