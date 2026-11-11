@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
-import { BASE_PRICE } from "@/lib/sizes";
+import { BASE_PRICE, SHIRT_SIZES } from "@/lib/sizes";
 
 type SchoolSummary = {
   schoolId: string;
@@ -57,6 +57,19 @@ export default function SummaryPage() {
     };
   }, []);
 
+  const sizeTotals = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const school of data?.schools || []) {
+      for (const [size, qty] of Object.entries(school.sizes || {})) {
+        counts[size] = (counts[size] || 0) + qty;
+      }
+    }
+    return SHIRT_SIZES.filter((s) => counts[s.code]).map((s) => ({
+      code: s.code,
+      qty: counts[s.code],
+    }));
+  }, [data?.schools]);
+
   return (
     <div className="shell summary-page">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -98,6 +111,25 @@ export default function SummaryPage() {
               <strong>{data.totals.pendingSchools} รร.</strong>
             </div>
           </div>
+
+          {sizeTotals.length > 0 && (
+            <section className="summary-size-box">
+              <div className="summary-size-head">
+                <p className="school-total-label">สรุปไซส์ทั้งหมด</p>
+                <p className="summary-size-total">
+                  รวม {data.totals.shirts} ตัว
+                </p>
+              </div>
+              <div className="size-guide">
+                {sizeTotals.map((s) => (
+                  <div key={s.code} className="size-pill">
+                    <strong>{s.code}</strong>
+                    <span>{s.qty} ตัว</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <div className="summary-list">
             {(data.schools || []).map((school) => (
