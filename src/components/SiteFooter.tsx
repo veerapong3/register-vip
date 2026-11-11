@@ -37,6 +37,27 @@ export function SiteFooter({ compact = false }: Props) {
             </div>
           </div>
         </div>
+
+        <div className="site-footer-meta">
+          <span className="developer-badge" title="ผู้พัฒนา">
+            <span className="developer-badge__ico" aria-hidden>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="8" r="3.2" />
+                <path d="M5 19.2c.8-3.2 3.2-4.8 7-4.8s6.2 1.6 7 4.8" />
+                <path d="M16.2 14.2 19 17l-1.2 1.2-2.8-2.8" />
+              </svg>
+            </span>
+            <span className="developer-badge__label">ผู้พัฒนา</span>
+            <span className="developer-badge__name">Dev V.tak</span>
+          </span>
+        </div>
       </div>
     </footer>
   );
