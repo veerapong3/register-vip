@@ -1288,6 +1288,30 @@ body {
   font-size: 1.2rem;
 }
 
+.summary-size-box {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(160deg, #fff7fb, #ffe8f1);
+  border: 1px solid #f3c3d5;
+}
+
+.summary-size-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.85rem;
+  margin-bottom: 0.65rem;
+}
+
+.summary-size-total {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--pink-deep);
+}
+
 .summary-list {
   display: grid;
   gap: 1rem;
