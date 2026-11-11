@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { SchoolSelect } from "@/components/SchoolSelect";
 import type { School } from "@/lib/schools";
@@ -22,6 +23,14 @@ const bankAccount = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "418-002259-4";
 const bankHolder =
   process.env.NEXT_PUBLIC_BANK_HOLDER || "นายวีระพงศ์ ตะโกนอก";
 
+const CONTACT_FOOTER = (
+  <>
+    โรงเรียนดอนตาลวิทยา × สพม.มุกดาหาร
+    <br />
+    ผู้ประสานงาน ผอ.บุญเลี่ยม บุญศรี และ รองฯ วีระพงศ์ ตะโกนอก · 087-946-3192
+  </>
+);
+
 export function RegistrationForm() {
   const [school, setSchool] = useState<School | null>(null);
   const [contactName, setContactName] = useState("");
@@ -32,6 +41,7 @@ export function RegistrationForm() {
   ]);
   const [slip, setSlip] = useState<File | null>(null);
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{
@@ -41,6 +51,17 @@ export function RegistrationForm() {
   } | null>(null);
 
   const total = useMemo(() => people.length * BASE_PRICE, [people.length]);
+
+  const sizeBreakdown = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of people) {
+      counts[p.size] = (counts[p.size] || 0) + 1;
+    }
+    return SHIRT_SIZES.filter((s) => counts[s.code]).map((s) => ({
+      code: s.code,
+      qty: counts[s.code],
+    }));
+  }, [people]);
 
   function updatePerson(id: string, patch: Partial<Person>) {
     setPeople((prev) =>
@@ -140,21 +161,27 @@ export function RegistrationForm() {
               </strong>
             </div>
           </div>
-          <button
-            type="button"
-            className="hero-cta mt-8"
-            onClick={() => {
-              setSuccess(null);
-              setPeople([{ id: uid(), name: "", size: "L" }]);
-              setContactName("");
-              setContactPhone("");
-              setNote("");
-              setSchool(null);
-              onSlipChange(null);
-            }}
-          >
-            ลงทะเบียนรายการใหม่
-          </button>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <button
+              type="button"
+              className="hero-cta"
+              onClick={() => {
+                setSuccess(null);
+                setPeople([{ id: uid(), name: "", size: "L" }]);
+                setContactName("");
+                setContactPhone("");
+                setNote("");
+                setSchool(null);
+                onSlipChange(null);
+              }}
+            >
+              ลงทะเบียนรายการใหม่
+            </button>
+            <Link href="/summary" className="hero-cta hero-cta-ghost">
+              ดูสรุปทุกโรงเรียน
+            </Link>
+          </div>
+          <p className="footer mt-10">{CONTACT_FOOTER}</p>
         </div>
       </div>
     );
@@ -163,7 +190,12 @@ export function RegistrationForm() {
   return (
     <>
       <section className="hero">
-        <div className="hero-media">
+        <button
+          type="button"
+          className="hero-media hero-media-btn"
+          onClick={() => setLightbox(true)}
+          aria-label="ดูรูปเสื้อขนาดเต็ม"
+        >
           <Image
             src="/jersey.jpg"
             alt="เสื้อกีฬา VIP สพม.มุกดาหาร กีฬาสัมพันธ์ 2569"
@@ -173,7 +205,7 @@ export function RegistrationForm() {
             className="anim-float"
             style={{ objectFit: "cover", objectPosition: "center top" }}
           />
-        </div>
+        </button>
         <div className="hero-shade" />
         <div className="hero-content">
           <p className="anim-fade text-sm font-medium tracking-[0.2em] text-white/80 uppercase">
@@ -187,11 +219,47 @@ export function RegistrationForm() {
           <p className="price-tag anim-fade anim-delay-2">
             ราคาเท่ากันทุกไซส์ · {BASE_PRICE} บาท / ตัว
           </p>
-          <a href="#register" className="hero-cta anim-fade anim-delay-3">
-            เริ่มลงทะเบียน
-          </a>
+          <div className="hero-actions anim-fade anim-delay-3">
+            <button
+              type="button"
+              className="hero-cta hero-cta-ghost"
+              onClick={() => setLightbox(true)}
+            >
+              ดูรูปเสื้อเต็มจอ
+            </button>
+            <a href="#register" className="hero-cta">
+              เริ่มลงทะเบียน
+            </a>
+            <Link href="/summary" className="hero-cta hero-cta-ghost">
+              สรุปออเดอร์
+            </Link>
+          </div>
         </div>
       </section>
+
+      {lightbox && (
+        <div
+          className="lightbox"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setLightbox(false)}
+        >
+          <button
+            type="button"
+            className="lightbox-close"
+            onClick={() => setLightbox(false)}
+          >
+            ปิด
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/jersey.jpg"
+            alt="เสื้อกีฬา VIP ขนาดเต็ม"
+            className="lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       <form id="register" onSubmit={onSubmit} className="shell">
         <section className="step">
@@ -297,13 +365,35 @@ export function RegistrationForm() {
               </div>
             ))}
           </div>
+
+          <div className="school-total-box">
+            <div>
+              <p className="school-total-label">
+                ยอดที่โรงเรียนต้องชำระ
+                {school ? ` · ${school.name}` : ""}
+              </p>
+              <p className="school-total-amount">
+                {total.toLocaleString("th-TH")} บาท
+              </p>
+              <p className="school-total-sub">
+                {people.length} ตัว × {BASE_PRICE} บาท
+              </p>
+            </div>
+            <div className="school-total-sizes">
+              {sizeBreakdown.map((s) => (
+                <span key={s.code}>
+                  {s.code} × {s.qty}
+                </span>
+              ))}
+            </div>
+          </div>
         </section>
 
         <section className="step">
           <p className="step-kicker">Step 03</p>
           <h2 className="step-title">โอนเงินและแนบสลิป</h2>
           <p className="step-desc">
-            โอนตามยอดรวม แล้วอัปโหลดสลิปเพื่อยืนยันการลงทะเบียน
+            โอนตามยอดรวมของโรงเรียน แล้วอัปโหลดสลิปเพื่อยืนยัน
           </p>
 
           <div className="pay-block">
@@ -363,7 +453,7 @@ export function RegistrationForm() {
         <div className="total-bar">
           <div>
             <p className="m-0 text-sm text-white/80">
-              {people.length} ตัว × {BASE_PRICE} บาท
+              ยอดรวมโรงเรียน · {people.length} ตัว × {BASE_PRICE} บาท
             </p>
             <p className="amount m-0 mt-1">
               {total.toLocaleString("th-TH")} บาท
@@ -374,9 +464,7 @@ export function RegistrationForm() {
           </button>
         </div>
 
-        <footer className="footer">
-          สอบถาม · academic@dontanwit.ac.th · YO SPORT × สพม.มุกดาหาร
-        </footer>
+        <footer className="footer">{CONTACT_FOOTER}</footer>
       </form>
     </>
   );
