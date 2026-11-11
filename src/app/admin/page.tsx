@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { PageEnter } from "@/components/PageEnter";
+import { PageLoader } from "@/components/PageLoader";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   confirmAction,
@@ -380,57 +382,55 @@ export default function AdminPage() {
   );
 
   if (booting) {
-    return (
-      <div className="shell">
-        <p className="text-[var(--muted)]">กำลังตรวจสอบสิทธิ์...</p>
-      </div>
-    );
+    return <PageLoader fullScreen label="กำลังตรวจสอบสิทธิ์แอดมิน..." />;
   }
 
   if (!authed) {
     return (
-      <div className="shell">
-        <p className="step-kicker">Admin</p>
-        <h1 className="step-title">ศูนย์ข้อมูลแอดมิน</h1>
-        <p className="step-desc">
-          ดูสรุปยอด รายการสั่งจอง รายชื่อ และอัปเดตสถานะชำระเงิน
-        </p>
-        <form onSubmit={onLogin} className="admin-login">
-          <label className="field-label">ชื่อผู้ใช้</label>
-          <input
-            type="text"
-            className="field field-solid"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            required
-          />
-          <label className="field-label mt-4">รหัสผ่าน</label>
-          <input
-            type="password"
-            className="field field-solid"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-          {error && <div className="error-box">{error}</div>}
-          <button type="submit" className="btn-add mt-5" disabled={loading}>
-            {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
-          </button>
-        </form>
-        <p className="mt-8">
-          <Link href="/summary" className="btn-ghost">
-            ← ดูสรุปสาธารณะ
-          </Link>
-        </p>
-        <SiteFooter />
-      </div>
+      <PageEnter label="กำลังเปิดหน้าแอดมิน...">
+        <div className="shell">
+          <p className="step-kicker">Admin</p>
+          <h1 className="step-title">ศูนย์ข้อมูลแอดมิน</h1>
+          <p className="step-desc">
+            ดูสรุปยอด รายการสั่งจอง รายชื่อ และอัปเดตสถานะชำระเงิน
+          </p>
+          <form onSubmit={onLogin} className="admin-login">
+            <label className="field-label">ชื่อผู้ใช้</label>
+            <input
+              type="text"
+              className="field field-solid"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+              required
+            />
+            <label className="field-label mt-4">รหัสผ่าน</label>
+            <input
+              type="password"
+              className="field field-solid"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+            {error && <div className="error-box">{error}</div>}
+            <button type="submit" className="btn-add mt-5" disabled={loading}>
+              {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+            </button>
+          </form>
+          <p className="mt-8">
+            <Link href="/summary" className="btn-ghost">
+              ← ดูสรุปสาธารณะ
+            </Link>
+          </p>
+          <SiteFooter />
+        </div>
+      </PageEnter>
     );
   }
 
   return (
-    <div className="shell summary-page">
+    <div className="shell summary-page page-enter-content">
       <div className="admin-topbar">
         <div className="admin-topbar-user">
           <span className="admin-topbar-label">Admin</span>
