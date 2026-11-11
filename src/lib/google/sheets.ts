@@ -411,6 +411,146 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
   };
 }
 
+export type RegistrationPersonUpdate = {
+  name: string;
+  jerseyNumber: string;
+  size: string;
+};
+
+export type RegistrationUpdateInput = {
+  registrationId: string;
+  schoolId: string;
+  schoolName: string;
+  contactName: string;
+  contactPhone: string;
+  note: string;
+  people: RegistrationPersonUpdate[];
+};
+
+/** อัปเดตรายการจองทั้งชุดตามรหัสลงทะเบียน (แก้ผู้ประสานงาน / รายชื่อ / ไซส์ / เบอร์เสื้อ) */
+export async function updateRegistration(
+  input: RegistrationUpdateInput,
+): Promise<AdminRegistration> {
+  await ensureHeaderRow();
+  const sheets = getSheetsClient();
+  const spreadsheetId = getSheetId();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "A2:P",
+  });
+  const rows = res.data.values ?? [];
+  const matches: number[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    if (String(rows[i]?.[1] || "").trim() === input.registrationId) {
+      matches.push(i);
+    }
+  }
+  if (matches.length === 0) {
+    throw new Error("ไม่พบรหัสลงทะเบียนนี้");
+  }
+
+  const first = rows[matches[0]] || [];
+  const timestamp = String(first[0] || "");
+  const { slipUrl } = parsePersonFromRow(first);
+  const quantity = input.people.length;
+  const totalAmount = quantity * BASE_PRICE;
+
+  const built = input.people.map((p, idx) => {
+    const sizeMeta = SHIRT_SIZES.find((s) => s.code === p.size);
+    const chest =
+      sizeMeta?.chestInches != null ? String(sizeMeta.chestInches) : "";
+    return [
+      timestamp,
+      input.registrationId,
+      input.schoolName,
+      input.schoolId,
+      input.contactName,
+      input.contactPhone,
+      idx + 1,
+      p.name,
+      p.jerseyNumber,
+      p.size,
+      chest,
+      BASE_PRICE,
+      quantity,
+      totalAmount,
+      slipUrl,
+      input.note,
+    ];
+  });
+
+  const updateCount = Math.min(matches.length, built.length);
+  if (updateCount > 0) {
+    const data = built.slice(0, updateCount).map((values, i) => {
+      const sheetRow = matches[i] + 2; // A2 = index 0
+      return {
+        range: `A${sheetRow}:P${sheetRow}`,
+        values: [values],
+      };
+    });
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        valueInputOption: "RAW",
+        data,
+      },
+    });
+  }
+
+  if (built.length > matches.length) {
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: "A:P",
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: { values: built.slice(matches.length) },
+    });
+  } else if (matches.length > built.length) {
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const sheetId = meta.data.sheets?.[0]?.properties?.sheetId;
+    if (sheetId == null) {
+      throw new Error("ไม่พบชีตหลักสำหรับลบแถว");
+    }
+    // ลบจากล่างขึ้นบน เพื่อไม่ให้ index เพี้ยน (sheet row = index+2, 0-based start/end)
+    const toDelete = matches.slice(built.length).sort((a, b) => b - a);
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: toDelete.map((rowIndex) => ({
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: "ROWS",
+              startIndex: rowIndex + 1, // +1 เพราะมี header ที่แถว 0
+              endIndex: rowIndex + 2,
+            },
+          },
+        })),
+      },
+    });
+  }
+
+  await ensureSchoolPaymentRow(input.schoolId, input.schoolName);
+
+  return {
+    registrationId: input.registrationId,
+    timestamp,
+    schoolId: input.schoolId,
+    schoolName: input.schoolName,
+    contactName: input.contactName,
+    contactPhone: input.contactPhone,
+    note: input.note,
+    slipUrl,
+    quantity,
+    totalAmount,
+    people: input.people.map((p) => ({
+      name: p.name,
+      jerseyNumber: p.jerseyNumber,
+      size: p.size,
+    })),
+  };
+}
+
 export async function updateSchoolPaymentStatus(params: {
   schoolId: string;
   schoolName: string;

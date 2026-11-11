@@ -12,6 +12,7 @@ import {
   toastSuccess,
 } from "@/lib/alerts";
 import { downloadCsv, stamp } from "@/lib/exportCsv";
+import { SCHOOLS } from "@/lib/schools";
 import { BASE_PRICE, SHIRT_SIZES } from "@/lib/sizes";
 
 type PaymentStatus = "รอตรวจสอบ" | "ชำระแล้ว" | "ไม่ครบ/มีปัญหา";
@@ -103,6 +104,15 @@ export default function AdminPage() {
   const [drafts, setDrafts] = useState<
     Record<string, { status: PaymentStatus; note: string }>
   >({});
+  const [editing, setEditing] = useState<Registration | null>(null);
+  const [editSchoolId, setEditSchoolId] = useState("");
+  const [editContactName, setEditContactName] = useState("");
+  const [editContactPhone, setEditContactPhone] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [editPeople, setEditPeople] = useState<
+    { name: string; jerseyNumber: string; size: string }[]
+  >([]);
+  const [editSaving, setEditSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -359,6 +369,106 @@ export default function AdminPage() {
     await persistSchoolStatus(school, draft.status, draft.note);
   }
 
+  function openEdit(reg: Registration) {
+    setEditing(reg);
+    setEditSchoolId(reg.schoolId);
+    setEditContactName(reg.contactName);
+    setEditContactPhone(reg.contactPhone);
+    setEditNote(reg.note || "");
+    setEditPeople(
+      reg.people.map((p) => ({
+        name: p.name,
+        jerseyNumber: p.jerseyNumber || "",
+        size: p.size,
+      })),
+    );
+  }
+
+  function closeEdit() {
+    if (editSaving) return;
+    setEditing(null);
+  }
+
+  function updateEditPerson(
+    index: number,
+    patch: Partial<{ name: string; jerseyNumber: string; size: string }>,
+  ) {
+    setEditPeople((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, ...patch } : p)),
+    );
+  }
+
+  function addEditPerson() {
+    setEditPeople((prev) => [
+      ...prev,
+      { name: "", jerseyNumber: "", size: "L" },
+    ]);
+  }
+
+  function removeEditPerson(index: number) {
+    setEditPeople((prev) =>
+      prev.length <= 1 ? prev : prev.filter((_, i) => i !== index),
+    );
+  }
+
+  async function saveEdit() {
+    if (!editing) return;
+    if (!editSchoolId || !editContactName.trim() || !editContactPhone.trim()) {
+      toastError("กรุณากรอกโรงเรียน ผู้ประสานงาน และเบอร์โทร");
+      return;
+    }
+    if (editPeople.some((p) => !p.name.trim() || !p.size)) {
+      toastError("กรุณากรอกชื่อและไซส์ให้ครบทุกคน");
+      return;
+    }
+    const ok = await confirmAction({
+      title: "บันทึกการแก้ไขรายการ?",
+      text: `${editing.registrationId} · ${editPeople.length} ตัว`,
+      confirmText: "บันทึก",
+      icon: "question",
+    });
+    if (!ok) return;
+
+    setEditSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/registrations", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          registrationId: editing.registrationId,
+          schoolId: editSchoolId,
+          contactName: editContactName.trim(),
+          contactPhone: editContactPhone.trim(),
+          note: editNote.trim(),
+          people: editPeople.map((p) => ({
+            name: p.name.trim(),
+            jerseyNumber: p.jerseyNumber.trim(),
+            size: p.size,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "บันทึกไม่สำเร็จ");
+      }
+      setEditing(null);
+      await load();
+      toastSuccess(`แก้ไขรายการแล้ว · ${editing.registrationId}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "บันทึกไม่สำเร็จ";
+      setError(msg);
+      toastError(msg);
+      if (/(รหัสผ่าน|ชื่อผู้ใช้|ไม่ถูกต้อง)/.test(msg)) {
+        setAuthed(false);
+        setEditing(null);
+      }
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
   async function quickApprove(school: SchoolSummary) {
     const slip =
       registrations.find((r) => r.schoolId === school.schoolId)?.slipUrl || "";
@@ -392,7 +502,7 @@ export default function AdminPage() {
           <p className="step-kicker">Admin</p>
           <h1 className="step-title">ศูนย์ข้อมูลแอดมิน</h1>
           <p className="step-desc">
-            ดูสรุปยอด รายการสั่งจอง รายชื่อ และอัปเดตสถานะชำระเงิน
+            ดูสรุปยอด แก้ไขรายการสั่งจอง รายชื่อ และอัปเดตสถานะชำระเงิน
           </p>
           <form onSubmit={onLogin} className="admin-login">
             <label className="field-label">ชื่อผู้ใช้</label>
@@ -459,7 +569,7 @@ export default function AdminPage() {
           <p className="step-kicker">Admin Dashboard</p>
           <h1 className="step-title">ศูนย์ข้อมูล VIP</h1>
           <p className="step-desc mb-0">
-            ดูภาพรวม · รายโรงเรียน · รายการลงทะเบียน และตรวจสลิป
+            ดูภาพรวม · แก้ไขรายการ · รายโรงเรียน และตรวจสลิป
           </p>
         </div>
         <button type="button" className="btn-logout" onClick={onLogout}>
@@ -629,16 +739,28 @@ export default function AdminPage() {
                 <p className="admin-meta">
                   ผู้ประสานงาน {r.contactName} · {r.contactPhone}
                 </p>
-                {safeSlipHref(r.slipUrl) && (
-                  <a
-                    className="admin-slip-link"
-                    href={safeSlipHref(r.slipUrl)!}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <div className="admin-card-actions">
+                  <button
+                    type="button"
+                    className="btn-edit"
+                    onClick={() => {
+                      setTab("orders");
+                      openEdit(r);
+                    }}
                   >
-                    เปิดสลิป
-                  </a>
-                )}
+                    แก้ไขรายการ
+                  </button>
+                  {safeSlipHref(r.slipUrl) && (
+                    <a
+                      className="admin-slip-link"
+                      href={safeSlipHref(r.slipUrl)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      เปิดสลิป
+                    </a>
+                  )}
+                </div>
               </article>
             );
             })}
@@ -730,16 +852,28 @@ export default function AdminPage() {
                             )
                             .join(" · ")}
                         </p>
-                        {safeSlipHref(o.slipUrl) && (
-                          <a
-                            className="admin-slip-link"
-                            href={safeSlipHref(o.slipUrl)!}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <div className="admin-card-actions">
+                          <button
+                            type="button"
+                            className="btn-edit"
+                            onClick={() => {
+                              setTab("orders");
+                              openEdit(o);
+                            }}
                           >
-                            เปิดสลิป
-                          </a>
-                        )}
+                            แก้ไข
+                          </button>
+                          {safeSlipHref(o.slipUrl) && (
+                            <a
+                              className="admin-slip-link"
+                              href={safeSlipHref(o.slipUrl)!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              เปิดสลิป
+                            </a>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -836,22 +970,177 @@ export default function AdminPage() {
                   </li>
                 ))}
               </ul>
-              {safeSlipHref(r.slipUrl) && (
-                <a
-                  className="admin-slip-link"
-                  href={safeSlipHref(r.slipUrl)!}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <div className="admin-card-actions">
+                <button
+                  type="button"
+                  className="btn-edit"
+                  onClick={() => openEdit(r)}
                 >
-                  เปิดสลิปใน Drive
-                </a>
-              )}
+                  แก้ไขรายการ
+                </button>
+                {safeSlipHref(r.slipUrl) && (
+                  <a
+                    className="admin-slip-link"
+                    href={safeSlipHref(r.slipUrl)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    เปิดสลิปใน Drive
+                  </a>
+                )}
+              </div>
             </article>
             );
           })}
           {filteredOrders.length === 0 && (
             <p className="text-[var(--muted)]">ไม่พบรายการ</p>
           )}
+        </div>
+      )}
+
+      {editing && (
+        <div className="admin-edit-overlay" role="dialog" aria-modal="true">
+          <div className="admin-edit-panel">
+            <div className="admin-edit-head">
+              <div>
+                <p className="step-kicker mb-0">แก้ไขรายการจอง</p>
+                <h2 className="admin-section-title mb-0">
+                  {editing.registrationId}
+                </h2>
+                <p className="admin-meta mb-0">{editing.timestamp}</p>
+              </div>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={closeEdit}
+                disabled={editSaving}
+              >
+                ปิด
+              </button>
+            </div>
+
+            <div className="admin-edit-grid">
+              <div>
+                <label className="field-label">โรงเรียน</label>
+                <select
+                  className="field field-solid"
+                  value={editSchoolId}
+                  onChange={(e) => setEditSchoolId(e.target.value)}
+                >
+                  {SCHOOLS.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="field-label">ผู้ประสานงาน</label>
+                <input
+                  className="field field-solid"
+                  value={editContactName}
+                  onChange={(e) => setEditContactName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="field-label">เบอร์โทร</label>
+                <input
+                  className="field field-solid"
+                  value={editContactPhone}
+                  onChange={(e) => setEditContactPhone(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="field-label">หมายเหตุ</label>
+                <input
+                  className="field field-solid"
+                  value={editNote}
+                  onChange={(e) => setEditNote(e.target.value)}
+                  placeholder="ถ้ามี"
+                />
+              </div>
+            </div>
+
+            <div className="admin-edit-people-head">
+              <h3 className="admin-section-title mb-0">
+                รายชื่อผู้สวมใส่ ({editPeople.length} คน ·{" "}
+                {(editPeople.length * BASE_PRICE).toLocaleString("th-TH")} ฿)
+              </h3>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={addEditPerson}
+                disabled={editSaving}
+              >
+                + เพิ่มคน
+              </button>
+            </div>
+
+            <div className="admin-edit-people">
+              {editPeople.map((p, i) => (
+                <div key={`edit-person-${i}`} className="admin-edit-person">
+                  <span className="admin-edit-index">{i + 1}</span>
+                  <input
+                    className="field field-solid"
+                    placeholder="ชื่อผู้สวมใส่"
+                    value={p.name}
+                    onChange={(e) =>
+                      updateEditPerson(i, { name: e.target.value })
+                    }
+                  />
+                  <input
+                    className="field field-solid"
+                    placeholder="เบอร์เสื้อ"
+                    value={p.jerseyNumber}
+                    onChange={(e) =>
+                      updateEditPerson(i, { jerseyNumber: e.target.value })
+                    }
+                  />
+                  <select
+                    className="field field-solid"
+                    value={p.size}
+                    onChange={(e) =>
+                      updateEditPerson(i, { size: e.target.value })
+                    }
+                  >
+                    {SHIRT_SIZES.map((s) => (
+                      <option key={s.code} value={s.code}>
+                        {s.code}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn-remove-person"
+                    onClick={() => removeEditPerson(i)}
+                    disabled={editSaving || editPeople.length <= 1}
+                    aria-label={`ลบคนที่ ${i + 1}`}
+                  >
+                    ลบ
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="admin-edit-actions">
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={closeEdit}
+                disabled={editSaving}
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                className="btn-add"
+                onClick={saveEdit}
+                disabled={editSaving}
+              >
+                {editSaving ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
