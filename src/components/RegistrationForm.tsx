@@ -217,7 +217,7 @@ export function RegistrationForm() {
             เลือกไซส์ แล้วแนบสลิปโอนเงิน
           </p>
           <p className="price-tag anim-fade anim-delay-2">
-            ราคาเท่ากันทุกไซส์ · {BASE_PRICE} บาท / ตัว
+            ตัวละ {BASE_PRICE}
           </p>
           <div className="hero-actions anim-fade anim-delay-3">
             <button
