@@ -8,18 +8,25 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const schools = await getSchoolOrderSummaries();
-    const totalQty = schools.reduce((s, x) => s + x.totalQty, 0);
+    const publicSchools = schools.map((s) => ({
+      schoolId: s.schoolId,
+      schoolName: s.schoolName,
+      totalQty: s.totalQty,
+      sizes: s.sizes,
+      paymentStatus: s.paymentStatus,
+      updatedAt: s.updatedAt,
+    }));
+    const totalQty = publicSchools.reduce((sum, x) => sum + x.totalQty, 0);
     const paidQty = schools
       .filter((x) => x.paymentStatus === "ชำระแล้ว")
       .reduce((s, x) => s + x.totalQty, 0);
     return NextResponse.json({
       ok: true,
       basePrice: BASE_PRICE,
-      schools,
+      schools: publicSchools,
       totals: {
-        schools: schools.length,
+        schools: publicSchools.length,
         shirts: totalQty,
-        amount: totalQty * BASE_PRICE,
         paidShirts: paidQty,
         pendingSchools: schools.filter((x) => x.paymentStatus !== "ชำระแล้ว")
           .length,

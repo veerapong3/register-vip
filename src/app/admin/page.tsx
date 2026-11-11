@@ -54,10 +54,28 @@ function statusClass(status: string) {
   return "status-pending";
 }
 
+function safeSlipHref(url: string) {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:") return null;
+    if (
+      u.hostname === "drive.google.com" ||
+      u.hostname === "docs.google.com" ||
+      u.hostname.endsWith(".googleusercontent.com")
+    ) {
+      return url;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export default function AdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
+  const [booting, setBooting] = useState(true);
   const [tab, setTab] = useState<Tab>("overview");
   const [schools, setSchools] = useState<SchoolSummary[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -72,15 +90,12 @@ export default function AdminPage() {
     Record<string, { status: PaymentStatus; note: string }>
   >({});
 
-  const load = useCallback(async (user: string, pass: string) => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/dashboard", {
         cache: "no-store",
-        headers: {
-          "x-admin-user": user,
-          "x-admin-password": pass,
-        },
+        credentials: "same-origin",
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
@@ -99,35 +114,19 @@ export default function AdminPage() {
         };
       }
       setDrafts(next);
+      setAuthed(true);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const savedUser = sessionStorage.getItem("vip-admin-user");
-    const savedPass = sessionStorage.getItem("vip-admin-pass");
-    if (savedUser && savedPass) {
-      setUsername(savedUser);
-      setPassword(savedPass);
-      setAuthed(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!authed || !username || !password) return;
-    load(username, password).catch((err) => {
-      setError(err instanceof Error ? err.message : "โหลดไม่สำเร็จ");
-      if (
-        err instanceof Error &&
-        /(รหัสผ่าน|ชื่อผู้ใช้)/.test(err.message)
-      ) {
+    load()
+      .catch(() => {
         setAuthed(false);
-        sessionStorage.removeItem("vip-admin-user");
-        sessionStorage.removeItem("vip-admin-pass");
-      }
-    });
-  }, [authed, username, password, load]);
+      })
+      .finally(() => setBooting(false));
+  }, [load]);
 
   const filteredSchools = useMemo(() => {
     return schools.filter((s) => {
@@ -151,14 +150,40 @@ export default function AdminPage() {
   async function onLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     try {
-      await load(username.trim(), password);
-      sessionStorage.setItem("vip-admin-user", username.trim());
-      sessionStorage.setItem("vip-admin-pass", password);
-      setAuthed(true);
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "เข้าสู่ระบบไม่สำเร็จ");
+      }
+      setPassword("");
+      await load();
     } catch (err) {
+      setAuthed(false);
       setError(err instanceof Error ? err.message : "เข้าสู่ระบบไม่สำเร็จ");
+    } finally {
+      setLoading(false);
     }
+  }
+
+  async function onLogout() {
+    await fetch("/api/admin/logout", {
+      method: "POST",
+      credentials: "same-origin",
+    }).catch(() => null);
+    setAuthed(false);
+    setSchools([]);
+    setRegistrations([]);
+    setTotals(null);
   }
 
   function exportNames() {
@@ -252,10 +277,9 @@ export default function AdminPage() {
       const draft = drafts[school.schoolId];
       const res = await fetch("/api/admin/payments", {
         method: "POST",
+        credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-user": username,
-          "x-admin-password": password,
         },
         body: JSON.stringify({
           schoolId: school.schoolId,
@@ -268,20 +292,26 @@ export default function AdminPage() {
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "อัปเดตไม่สำเร็จ");
       }
-      await load(username, password);
+      await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "อัปเดตไม่สำเร็จ");
       if (
         err instanceof Error &&
-        /(รหัสผ่าน|ชื่อผู้ใช้)/.test(err.message)
+        /(รหัสผ่าน|ชื่อผู้ใช้|ไม่ถูกต้อง)/.test(err.message)
       ) {
         setAuthed(false);
-        sessionStorage.removeItem("vip-admin-user");
-        sessionStorage.removeItem("vip-admin-pass");
       }
     } finally {
       setSavingId(null);
     }
+  }
+
+  if (booting) {
+    return (
+      <div className="shell">
+        <p className="text-[var(--muted)]">กำลังตรวจสอบสิทธิ์...</p>
+      </div>
+    );
   }
 
   if (!authed) {
@@ -340,7 +370,7 @@ export default function AdminPage() {
           <button
             type="button"
             className="btn-ghost"
-            onClick={() => load(password)}
+            onClick={() => load()}
             disabled={loading}
           >
             รีเฟรช
@@ -348,15 +378,7 @@ export default function AdminPage() {
           <Link href="/summary" className="btn-ghost">
             หน้าสรุป
           </Link>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => {
-              sessionStorage.removeItem("vip-admin-user");
-              sessionStorage.removeItem("vip-admin-pass");
-              setAuthed(false);
-            }}
-          >
+          <button type="button" className="btn-ghost" onClick={onLogout}>
             ออกจากระบบ
           </button>
         </div>
@@ -461,12 +483,12 @@ export default function AdminPage() {
                 <p className="admin-meta">
                   ผู้ประสานงาน {r.contactName} · {r.contactPhone}
                 </p>
-                {r.slipUrl && (
+                {safeSlipHref(r.slipUrl) && (
                   <a
                     className="admin-slip-link"
-                    href={r.slipUrl}
+                    href={safeSlipHref(r.slipUrl)!}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                   >
                     เปิดสลิป
                   </a>
@@ -555,12 +577,12 @@ export default function AdminPage() {
                             .map((p) => `${p.name} (${p.size})`)
                             .join(" · ")}
                         </p>
-                        {o.slipUrl && (
+                        {safeSlipHref(o.slipUrl) && (
                           <a
                             className="admin-slip-link"
-                            href={o.slipUrl}
+                            href={safeSlipHref(o.slipUrl)!}
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
                           >
                             เปิดสลิป
                           </a>
@@ -653,12 +675,12 @@ export default function AdminPage() {
                   </li>
                 ))}
               </ul>
-              {r.slipUrl && (
+              {safeSlipHref(r.slipUrl) && (
                 <a
                   className="admin-slip-link"
-                  href={r.slipUrl}
+                  href={safeSlipHref(r.slipUrl)!}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                 >
                   เปิดสลิปใน Drive
                 </a>

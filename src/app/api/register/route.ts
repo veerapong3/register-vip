@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { uploadSlip } from "@/lib/google/drive";
 import { appendRegistrationRows } from "@/lib/google/sheets";
+import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { SCHOOLS } from "@/lib/schools";
 import { getSize, priceForSize, SHIRT_SIZES } from "@/lib/sizes";
+import { MAX_PEOPLE_PER_ORDER, validateSlipFile } from "@/lib/slipFile";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -37,11 +39,24 @@ function makeRegistrationId() {
 
 export async function POST(req: Request) {
   try {
+    const ip = clientIp(req);
+    const limited = rateLimit({
+      key: `register:${ip}`,
+      limit: 8,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.ok) {
+      return NextResponse.json(
+        { ok: false, error: "ส่งคำขอถี่เกินไป กรุณารอสักครู่แล้วลองใหม่" },
+        { status: 429 },
+      );
+    }
+
     const form = await req.formData();
     const schoolId = String(form.get("schoolId") || "").trim();
-    const contactName = String(form.get("contactName") || "").trim();
-    const contactPhone = String(form.get("contactPhone") || "").trim();
-    const note = String(form.get("note") || "").trim();
+    const contactName = String(form.get("contactName") || "").trim().slice(0, 120);
+    const contactPhone = String(form.get("contactPhone") || "").trim().slice(0, 40);
+    const note = String(form.get("note") || "").trim().slice(0, 500);
     const peopleRaw = String(form.get("people") || "[]");
     const slip = form.get("slip");
 
@@ -81,10 +96,19 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+    if (people.length > MAX_PEOPLE_PER_ORDER) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `ลงทะเบียนได้ไม่เกิน ${MAX_PEOPLE_PER_ORDER} คนต่อรายการ`,
+        },
+        { status: 400 },
+      );
+    }
 
     const validCodes = new Set(SHIRT_SIZES.map((s) => s.code));
     const cleaned = people.map((p, i) => {
-      const name = String(p?.name || "").trim();
+      const name = String(p?.name || "").trim().slice(0, 120);
       const size = String(p?.size || "").trim();
       if (!name) throw new Error(`กรุณากรอกชื่อคนที่ ${i + 1}`);
       if (!validCodes.has(size)) throw new Error(`ไซส์ของคนที่ ${i + 1} ไม่ถูกต้อง`);
@@ -109,11 +133,19 @@ export async function POST(req: Request) {
     const timestamp = bangkokTimestamp();
 
     const buffer = Buffer.from(await slip.arrayBuffer());
+    const fileCheck = validateSlipFile(buffer, slip.type || "");
+    if (!fileCheck.ok) {
+      return NextResponse.json(
+        { ok: false, error: fileCheck.error },
+        { status: 400 },
+      );
+    }
+
     const uploaded = await uploadSlip({
       registrationId,
       schoolName: school.name,
       fileName: slip.name || "slip.jpg",
-      mimeType: slip.type || "image/jpeg",
+      mimeType: fileCheck.mimeType,
       buffer,
     });
 
@@ -147,7 +179,6 @@ export async function POST(req: Request) {
       registrationId,
       quantity: cleaned.length,
       totalAmount,
-      slipUrl: uploaded.fileUrl,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";

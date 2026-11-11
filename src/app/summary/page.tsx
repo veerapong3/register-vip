@@ -9,10 +9,8 @@ type SchoolSummary = {
   schoolId: string;
   schoolName: string;
   totalQty: number;
-  totalAmount: number;
   sizes: Record<string, number>;
   paymentStatus: "รอตรวจสอบ" | "ชำระแล้ว" | "ไม่ครบ/มีปัญหา";
-  paymentNote: string;
   updatedAt: string;
 };
 
@@ -23,7 +21,6 @@ type SummaryResponse = {
   totals?: {
     schools: number;
     shirts: number;
-    amount: number;
     paidShirts: number;
     pendingSchools: number;
   };
@@ -149,9 +146,6 @@ export default function SummaryPage() {
                     </div>
                   ))}
                 </div>
-                {school.paymentNote && (
-                  <p className="summary-note">หมายเหตุ: {school.paymentNote}</p>
-                )}
               </article>
             ))}
             {(data.schools || []).length === 0 && (

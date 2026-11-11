@@ -64,21 +64,7 @@ export async function uploadSlip(params: {
   const fileId = res.data.id;
   if (!fileId) throw new Error("อัปโหลดสลิปไม่สำเร็จ");
 
-  try {
-    await drive.permissions.create({
-      fileId,
-      requestBody: {
-        role: "reader",
-        type: "anyone",
-        allowFileDiscovery: false,
-      },
-      sendNotificationEmail: false,
-      supportsAllDrives: true,
-    });
-  } catch {
-    // Workspace policy may block public share; link still works for owner
-  }
-
+  // ไม่เปิด anyone/public — ให้เฉพาะเจ้าของโฟลเดอร์และผู้ที่ถูกแชร์โฟลเดอร์ดูได้
   return {
     fileId,
     fileName: res.data.name || name,

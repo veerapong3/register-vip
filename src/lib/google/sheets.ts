@@ -165,7 +165,7 @@ export async function appendRegistrationRows(rows: SheetPersonRow[]) {
   await sheets.spreadsheets.values.append({
     spreadsheetId,
     range: "A:O",
-    valueInputOption: "USER_ENTERED",
+    valueInputOption: "RAW",
     insertDataOption: "INSERT_ROWS",
     requestBody: { values },
   });
