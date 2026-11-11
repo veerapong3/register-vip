@@ -5,12 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { SchoolSelect } from "@/components/SchoolSelect";
 import type { School } from "@/lib/schools";
-import {
-  BASE_PRICE,
-  formatSizeLabel,
-  priceForSize,
-  SHIRT_SIZES,
-} from "@/lib/sizes";
+import { BASE_PRICE, priceForSize, SHIRT_SIZES } from "@/lib/sizes";
 
 type Person = { id: string; name: string; size: string };
 
@@ -262,18 +257,23 @@ export function RegistrationForm() {
       )}
 
       <form id="register" onSubmit={onSubmit} className="shell">
-        <section className="step">
-          <p className="step-kicker">Step 01</p>
-          <h2 className="step-title">เลือกโรงเรียน</h2>
-          <p className="step-desc">
-            ค้นหาจาก 30 โรงเรียนในสังกัด สพม.มุกดาหาร
-          </p>
+        <section className="step-panel step-school">
+          <div className="step-panel-head">
+            <span className="step-num">1</span>
+            <div>
+              <p className="step-kicker">โรงเรียน</p>
+              <h2 className="step-title">เลือกโรงเรียนและผู้ประสานงาน</h2>
+              <p className="step-desc mb-0">
+                ค้นหาจาก 30 โรงเรียนในสังกัด สพม.มุกดาหาร
+              </p>
+            </div>
+          </div>
           <SchoolSelect value={school} onChange={setSchool} />
-          <div className="grid-2 mt-6">
+          <div className="grid-2 mt-5">
             <div>
               <label className="field-label">ผู้ประสานงาน</label>
               <input
-                className="field"
+                className="field field-solid"
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
                 placeholder="ชื่อ-นามสกุล"
@@ -283,7 +283,7 @@ export function RegistrationForm() {
             <div>
               <label className="field-label">เบอร์โทร</label>
               <input
-                className="field"
+                className="field field-solid"
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
                 placeholder="08x-xxx-xxxx"
@@ -294,21 +294,20 @@ export function RegistrationForm() {
           </div>
         </section>
 
-        <section className="step">
-          <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="step-kicker">Step 02</p>
-              <h2 className="step-title">รายชื่อและไซส์เสื้อ</h2>
-              <p className="step-desc mb-0">
-                เพิ่มรายชื่อได้เรื่อยๆ · ทุกตัวราคา {BASE_PRICE} บาท
-              </p>
+        <section className="step-panel step-people">
+          <div className="step-panel-head">
+            <span className="step-num">2</span>
+            <div className="flex-1">
+              <p className="step-kicker">รายชื่อเสื้อ</p>
+              <h2 className="step-title">เพิ่มรายชื่อและเลือกไซส์</h2>
+              <p className="step-desc mb-0">กดปุ่มไซส์ได้เลย · ตัวละ {BASE_PRICE}</p>
             </div>
-            <button type="button" className="btn-ghost" onClick={addPerson}>
+            <button type="button" className="btn-add" onClick={addPerson}>
               + เพิ่มรายชื่อ
             </button>
           </div>
 
-          <div className="size-guide" aria-label="ตารางไซส์">
+          <div className="size-guide" aria-label="ตารางไซส์อ้างอิง">
             {SHIRT_SIZES.filter((s) => s.chestInches).map((s) => (
               <div key={s.code} className="size-pill">
                 <strong>{s.code}</strong>
@@ -317,13 +316,24 @@ export function RegistrationForm() {
             ))}
           </div>
 
-          <div>
+          <div className="person-list">
             {people.map((person, index) => (
-              <div key={person.id} className="person-row">
+              <div key={person.id} className="person-card">
+                <div className="person-card-top">
+                  <span className="person-badge">คนที่ {index + 1}</span>
+                  <button
+                    type="button"
+                    className="btn-remove"
+                    onClick={() => removePerson(person.id)}
+                    disabled={people.length <= 1}
+                  >
+                    ลบ
+                  </button>
+                </div>
                 <div>
-                  <label className="field-label">คนที่ {index + 1}</label>
+                  <label className="field-label">ชื่อ-นามสกุล</label>
                   <input
-                    className="field"
+                    className="field field-solid"
                     value={person.name}
                     onChange={(e) =>
                       updatePerson(person.id, { name: e.target.value })
@@ -333,35 +343,27 @@ export function RegistrationForm() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">ไซส์</label>
-                  <select
-                    className="field"
-                    value={person.size}
-                    onChange={(e) =>
-                      updatePerson(person.id, { size: e.target.value })
-                    }
-                    required
-                  >
+                  <label className="field-label">เลือกไซส์</label>
+                  <div className="size-btn-grid" role="group" aria-label="ไซส์เสื้อ">
                     {SHIRT_SIZES.map((s) => (
-                      <option key={s.code} value={s.code}>
-                        {formatSizeLabel(s)}
-                      </option>
+                      <button
+                        key={s.code}
+                        type="button"
+                        className={`size-btn${person.size === s.code ? " is-active" : ""}`}
+                        onClick={() =>
+                          updatePerson(person.id, { size: s.code })
+                        }
+                        aria-pressed={person.size === s.code}
+                      >
+                        <strong>{s.code}</strong>
+                        {s.chestInches ? <span>{s.chestInches}&quot;</span> : null}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:pb-2">
-                  <span className="text-sm font-semibold text-[var(--pink-deep)]">
-                    {priceForSize(person.size).toLocaleString("th-TH")} ฿
-                  </span>
-                  <button
-                    type="button"
-                    className="btn-danger"
-                    onClick={() => removePerson(person.id)}
-                    disabled={people.length <= 1}
-                  >
-                    ลบ
-                  </button>
-                </div>
+                <p className="person-price">
+                  {priceForSize(person.size).toLocaleString("th-TH")} บาท
+                </p>
               </div>
             ))}
           </div>
@@ -389,15 +391,20 @@ export function RegistrationForm() {
           </div>
         </section>
 
-        <section className="step">
-          <p className="step-kicker">Step 03</p>
-          <h2 className="step-title">โอนเงินและแนบสลิป</h2>
-          <p className="step-desc">
-            โอนตามยอดรวมของโรงเรียน แล้วอัปโหลดสลิปเพื่อยืนยัน
-          </p>
+        <section className="step-panel step-pay">
+          <div className="step-panel-head">
+            <span className="step-num">3</span>
+            <div>
+              <p className="step-kicker">ชำระเงิน</p>
+              <h2 className="step-title">โอนเงินและแนบสลิป</h2>
+              <p className="step-desc mb-0">
+                โอนตามยอดรวมของโรงเรียน แล้วอัปโหลดสลิปเพื่อยืนยัน
+              </p>
+            </div>
+          </div>
 
           <div className="pay-block">
-            <div>
+            <div className="pay-account">
               <ul className="account-list">
                 <li>
                   <span>ธนาคาร</span>
@@ -422,13 +429,18 @@ export function RegistrationForm() {
 
             <div>
               <label className="field-label">อัปโหลดสลิปโอนเงิน</label>
-              <input
-                type="file"
-                accept="image/*,.pdf"
-                className="field"
-                onChange={(e) => onSlipChange(e.target.files?.[0] ?? null)}
-                required
-              />
+              <label className="file-btn">
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => onSlipChange(e.target.files?.[0] ?? null)}
+                  required={!slip}
+                />
+                <span>{slip ? "เปลี่ยนไฟล์สลิป" : "เลือกไฟล์สลิป"}</span>
+              </label>
+              {slip && (
+                <p className="file-name">{slip.name}</p>
+              )}
               {slipPreview && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -439,7 +451,7 @@ export function RegistrationForm() {
               )}
               <label className="field-label mt-5">หมายเหตุ (ถ้ามี)</label>
               <textarea
-                className="field min-h-[88px]"
+                className="field field-solid min-h-[88px]"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="เช่น โอนจากบัญชีชื่อ..."
