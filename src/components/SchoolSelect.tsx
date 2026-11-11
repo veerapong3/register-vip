@@ -11,7 +11,7 @@ export function SchoolSelect({ value, onChange }: Props) {
   return (
     <div className="school-select">
       <label className="field-label" htmlFor="school-select">
-        โรงเรียนใน สพม.มุกดาหาร ({SCHOOLS.length} โรง)
+        โรงเรียน / หน่วยงาน ({SCHOOLS.length} รายการ)
       </label>
       <select
         id="school-select"

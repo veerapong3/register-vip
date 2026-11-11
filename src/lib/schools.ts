@@ -4,8 +4,8 @@ export type School = {
   district: string;
 };
 
-/** โรงเรียนในสังกัด สพม.มุกดาหาร จำนวน 30 โรงเรียน */
-export const SCHOOLS: School[] = [
+/** โรงเรียนในสังกัด สพม.มุกดาหาร 30 โรง + หน่วยงาน สพม.มุกดาหาร = 31 รายการ */
+const SCHOOL_LIST: School[] = [
   { id: "49012021", name: "กกตูมประชาสรรค์ รัชมังคลาภิเษก", district: "ดงหลวง" },
   { id: "49012025", name: "คำชะอีพิทยาคม", district: "คำชะอี" },
   { id: "49012022", name: "คำชะอีวิทยาคาร", district: "คำชะอี" },
@@ -41,6 +41,15 @@ export const SCHOOLS: School[] = [
   { id: "49012026", name: "เหล่าประชาอุทิศ", district: "คำชะอี" },
   { id: "49012013", name: "อุดมวิทย์", district: "นิคมคำสร้อย" },
 ].sort((a, b) => a.name.localeCompare(b.name, "th"));
+
+/** หน่วยงานที่ 31 — แสดงไว้บนสุดของรายการ */
+export const SESAO_AGENCY: School = {
+  id: "49012031",
+  name: "สพม.มุกดาหาร",
+  district: "หน่วยงาน",
+};
+
+export const SCHOOLS: School[] = [SESAO_AGENCY, ...SCHOOL_LIST];
 
 export function filterSchools(query: string): School[] {
   const q = query.trim().toLowerCase();

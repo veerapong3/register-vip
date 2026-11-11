@@ -319,7 +319,7 @@ export function RegistrationForm() {
               <p className="step-kicker">โรงเรียน</p>
               <h2 className="step-title">เลือกโรงเรียนและผู้ประสานงาน</h2>
               <p className="step-desc mb-0">
-                ค้นหาจาก 30 โรงเรียนในสังกัด สพม.มุกดาหาร
+                เลือกจาก 30 โรงเรียน + สพม.มุกดาหาร (31 รายการ)
               </p>
             </div>
           </div>
