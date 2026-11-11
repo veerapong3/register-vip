@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkAdmin } from "@/lib/adminAuth";
 import {
   updateSchoolPaymentStatus,
   type PaymentStatus,
@@ -9,18 +10,11 @@ export const dynamic = "force-dynamic";
 
 const ALLOWED: PaymentStatus[] = ["รอตรวจสอบ", "ชำระแล้ว", "ไม่ครบ/มีปัญหา"];
 
-function checkAdmin(req: Request) {
-  const password = process.env.ADMIN_PASSWORD?.trim();
-  if (!password) return false;
-  const header = req.headers.get("x-admin-password")?.trim();
-  return Boolean(header && header === password);
-}
-
 export async function POST(req: Request) {
   try {
     if (!checkAdmin(req)) {
       return NextResponse.json(
-        { ok: false, error: "รหัสผ่านแอดมินไม่ถูกต้อง" },
+        { ok: false, error: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" },
         { status: 401 },
       );
     }

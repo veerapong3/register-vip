@@ -55,6 +55,7 @@ function statusClass(status: string) {
 }
 
 export default function AdminPage() {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
@@ -71,12 +72,15 @@ export default function AdminPage() {
     Record<string, { status: PaymentStatus; note: string }>
   >({});
 
-  const load = useCallback(async (pass: string) => {
+  const load = useCallback(async (user: string, pass: string) => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/dashboard", {
         cache: "no-store",
-        headers: { "x-admin-password": pass },
+        headers: {
+          "x-admin-user": user,
+          "x-admin-password": pass,
+        },
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
@@ -101,23 +105,29 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("vip-admin-pass");
-    if (saved) {
-      setPassword(saved);
+    const savedUser = sessionStorage.getItem("vip-admin-user");
+    const savedPass = sessionStorage.getItem("vip-admin-pass");
+    if (savedUser && savedPass) {
+      setUsername(savedUser);
+      setPassword(savedPass);
       setAuthed(true);
     }
   }, []);
 
   useEffect(() => {
-    if (!authed || !password) return;
-    load(password).catch((err) => {
+    if (!authed || !username || !password) return;
+    load(username, password).catch((err) => {
       setError(err instanceof Error ? err.message : "โหลดไม่สำเร็จ");
-      if (err instanceof Error && /รหัสผ่าน/.test(err.message)) {
+      if (
+        err instanceof Error &&
+        /(รหัสผ่าน|ชื่อผู้ใช้)/.test(err.message)
+      ) {
         setAuthed(false);
+        sessionStorage.removeItem("vip-admin-user");
         sessionStorage.removeItem("vip-admin-pass");
       }
     });
-  }, [authed, password, load]);
+  }, [authed, username, password, load]);
 
   const filteredSchools = useMemo(() => {
     return schools.filter((s) => {
@@ -142,7 +152,8 @@ export default function AdminPage() {
     e.preventDefault();
     setError(null);
     try {
-      await load(password);
+      await load(username.trim(), password);
+      sessionStorage.setItem("vip-admin-user", username.trim());
       sessionStorage.setItem("vip-admin-pass", password);
       setAuthed(true);
     } catch (err) {
@@ -243,6 +254,7 @@ export default function AdminPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-admin-user": username,
           "x-admin-password": password,
         },
         body: JSON.stringify({
@@ -256,11 +268,15 @@ export default function AdminPage() {
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "อัปเดตไม่สำเร็จ");
       }
-      await load(password);
+      await load(username, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "อัปเดตไม่สำเร็จ");
-      if (err instanceof Error && /รหัสผ่าน/.test(err.message)) {
+      if (
+        err instanceof Error &&
+        /(รหัสผ่าน|ชื่อผู้ใช้)/.test(err.message)
+      ) {
         setAuthed(false);
+        sessionStorage.removeItem("vip-admin-user");
         sessionStorage.removeItem("vip-admin-pass");
       }
     } finally {
@@ -277,12 +293,22 @@ export default function AdminPage() {
           ดูสรุปยอด รายการสั่งจอง รายชื่อ และอัปเดตสถานะชำระเงิน
         </p>
         <form onSubmit={onLogin} className="admin-login">
-          <label className="field-label">รหัสผ่านแอดมิน</label>
+          <label className="field-label">ชื่อผู้ใช้</label>
+          <input
+            type="text"
+            className="field field-solid"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            required
+          />
+          <label className="field-label mt-4">รหัสผ่าน</label>
           <input
             type="password"
             className="field field-solid"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
             required
           />
           {error && <div className="error-box">{error}</div>}
