@@ -43,11 +43,6 @@ export function SchoolSelect({ value, onChange }: Props) {
         className="field"
         required={!value}
       />
-      {value && (
-        <p className="mt-1 text-xs text-[var(--muted)]">
-          อำเภอ{value.district}
-        </p>
-      )}
       {open && (
         <ul className="school-menu">
           {results.length === 0 ? (
@@ -64,9 +59,6 @@ export function SchoolSelect({ value, onChange }: Props) {
                   }}
                 >
                   <span className="block text-sm font-medium">{s.name}</span>
-                  <span className="block text-xs text-[var(--muted)]">
-                    อ.{s.district}
-                  </span>
                 </button>
               </li>
             ))
