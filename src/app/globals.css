@@ -954,6 +954,70 @@ body {
   max-width: 22rem;
 }
 
+.admin-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.95rem;
+  background: linear-gradient(145deg, rgba(181, 45, 92, 0.95), rgba(92, 24, 48, 0.98));
+  color: white;
+  box-shadow: 0 10px 22px rgba(122, 24, 56, 0.16);
+  position: sticky;
+  top: 0.65rem;
+  z-index: 30;
+}
+
+.admin-topbar-user {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.admin-topbar-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.admin-topbar-user strong {
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.admin-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.admin-topbar-actions .btn-ghost {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.btn-logout {
+  border: 0;
+  border-radius: 999px;
+  background: white;
+  color: var(--pink-deep);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.btn-logout:hover {
+  filter: brightness(1.03);
+}
+
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;

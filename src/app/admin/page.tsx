@@ -431,15 +431,12 @@ export default function AdminPage() {
 
   return (
     <div className="shell summary-page">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="step-kicker">Admin Dashboard</p>
-          <h1 className="step-title">ศูนย์ข้อมูล VIP</h1>
-          <p className="step-desc mb-0">
-            ดูภาพรวม · รายโรงเรียน · รายการลงทะเบียน และตรวจสลิป
-          </p>
+      <div className="admin-topbar">
+        <div className="admin-topbar-user">
+          <span className="admin-topbar-label">Admin</span>
+          <strong>{username || "admin"}</strong>
         </div>
-        <div className="flex flex-wrap gap-2 text-sm">
+        <div className="admin-topbar-actions">
           <button
             type="button"
             className="btn-ghost"
@@ -451,10 +448,23 @@ export default function AdminPage() {
           <Link href="/summary" className="btn-ghost">
             หน้าสรุป
           </Link>
-          <button type="button" className="btn-ghost" onClick={onLogout}>
-            ออกจากระบบ
+          <button type="button" className="btn-logout" onClick={onLogout}>
+            Logout
           </button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-end justify-between gap-3 mt-4">
+        <div>
+          <p className="step-kicker">Admin Dashboard</p>
+          <h1 className="step-title">ศูนย์ข้อมูล VIP</h1>
+          <p className="step-desc mb-0">
+            ดูภาพรวม · รายโรงเรียน · รายการลงทะเบียน และตรวจสลิป
+          </p>
+        </div>
+        <button type="button" className="btn-logout" onClick={onLogout}>
+          ออกจากระบบ
+        </button>
       </div>
 
       <div className="admin-tabs">
