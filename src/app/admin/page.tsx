@@ -60,6 +60,12 @@ function statusClass(status: string) {
   return "status-pending";
 }
 
+function cardToneClass(status: string) {
+  if (status === "ชำระแล้ว") return "is-paid";
+  if (status === "ไม่ครบ/มีปัญหา") return "is-issue";
+  return "is-pending";
+}
+
 function safeSlipHref(url: string) {
   try {
     const u = new URL(url);
@@ -592,8 +598,15 @@ export default function AdminPage() {
 
           <h2 className="admin-section-title mt-8">รายการล่าสุด</h2>
           <div className="summary-list">
-            {registrations.slice(0, 5).map((r) => (
-              <article key={r.registrationId} className="summary-card">
+            {registrations.slice(0, 5).map((r) => {
+              const schoolStatus =
+                schools.find((s) => s.schoolId === r.schoolId)?.paymentStatus ||
+                "รอตรวจสอบ";
+              return (
+              <article
+                key={r.registrationId}
+                className={`summary-card admin-card ${cardToneClass(schoolStatus)}`}
+              >
                 <div className="summary-card-head">
                   <h2>{r.schoolName}</h2>
                   <strong>
@@ -617,7 +630,8 @@ export default function AdminPage() {
                   </a>
                 )}
               </article>
-            ))}
+            );
+            })}
           </div>
         </div>
       )}
@@ -660,7 +674,10 @@ export default function AdminPage() {
               (r) => r.schoolId === school.schoolId,
             );
             return (
-              <article key={school.schoolId} className="summary-card">
+              <article
+                key={school.schoolId}
+                className={`summary-card admin-card ${cardToneClass(school.paymentStatus)}`}
+              >
                 <div className="summary-card-head">
                   <h2>{school.schoolName}</h2>
                   <span
@@ -778,8 +795,15 @@ export default function AdminPage() {
 
       {tab === "orders" && (
         <div className="summary-list">
-          {filteredOrders.map((r) => (
-            <article key={r.registrationId} className="summary-card">
+          {filteredOrders.map((r) => {
+            const schoolStatus =
+              schools.find((s) => s.schoolId === r.schoolId)?.paymentStatus ||
+              "รอตรวจสอบ";
+            return (
+            <article
+              key={r.registrationId}
+              className={`summary-card admin-card ${cardToneClass(schoolStatus)}`}
+            >
               <div className="summary-card-head">
                 <h2>{r.schoolName}</h2>
                 <strong>
@@ -813,7 +837,8 @@ export default function AdminPage() {
                 </a>
               )}
             </article>
-          ))}
+            );
+          })}
           {filteredOrders.length === 0 && (
             <p className="text-[var(--muted)]">ไม่พบรายการ</p>
           )}

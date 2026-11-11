@@ -973,8 +973,9 @@ body {
   gap: 0.75rem 1rem;
   padding: 0.85rem 0.95rem;
   border-radius: 1rem;
-  background: linear-gradient(160deg, #fff7fb, #ffe8f1);
-  border: 1px solid #f3c3d5;
+  background: linear-gradient(160deg, #fff9f0, #ffe8cc);
+  border: 1px solid #f0c987;
+  box-shadow: 0 8px 18px rgba(176, 110, 20, 0.08);
 }
 
 .quick-approve-main {
@@ -1475,8 +1476,27 @@ body {
 .summary-card {
   padding: 1.1rem 1.15rem;
   border-radius: 1.15rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+}
+
+.summary-card.admin-card {
+  box-shadow: 0 10px 22px rgba(40, 16, 24, 0.06);
+}
+
+.summary-card.admin-card.is-pending {
+  background: linear-gradient(160deg, #fffaf3 0%, #fff1db 100%);
+  border-color: #efc48a;
+}
+
+.summary-card.admin-card.is-paid {
+  background: linear-gradient(160deg, #f3fbf6 0%, #dff5e8 100%);
+  border-color: #8fd0ab;
+}
+
+.summary-card.admin-card.is-issue {
+  background: linear-gradient(160deg, #fff6f6 0%, #ffe1e1 100%);
+  border-color: #efb0b0;
 }
 
 .summary-card-head {
@@ -1498,6 +1518,18 @@ body {
   color: var(--pink-deep);
 }
 
+.admin-card.is-pending .summary-amount {
+  color: #9a5b00;
+}
+
+.admin-card.is-paid .summary-amount {
+  color: #0f7a3c;
+}
+
+.admin-card.is-issue .summary-amount {
+  color: #b42318;
+}
+
 .summary-note {
   margin: 0.5rem 0 0;
   font-size: 0.85rem;
@@ -1514,16 +1546,16 @@ body {
 }
 
 .status-pending {
-  background: #fff4e5;
-  color: #9a5b00;
+  background: #ffe8c2;
+  color: #8a4b00;
 }
 
 .status-paid {
-  background: #e8f8ef;
-  color: #0f7a3c;
+  background: #cfeedd;
+  color: #0b6a34;
 }
 
 .status-issue {
-  background: #fdecec;
-  color: #b42318;
+  background: #ffd4d4;
+  color: #9f1d14;
 }
