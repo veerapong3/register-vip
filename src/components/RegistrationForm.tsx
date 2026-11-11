@@ -326,7 +326,7 @@ export function RegistrationForm() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/jersey.jpg"
+              src="/jersey-vip.jpg"
               alt="ตัวอย่างเสื้อ VIP"
               className="jersey-preview-img"
               width={1024}
