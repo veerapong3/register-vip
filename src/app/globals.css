@@ -961,6 +961,64 @@ body {
   margin: 1.25rem 0 0.5rem;
 }
 
+.quick-approve-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.quick-approve-card {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 1rem;
+  background: linear-gradient(160deg, #fff7fb, #ffe8f1);
+  border: 1px solid #f3c3d5;
+}
+
+.quick-approve-main {
+  min-width: 0;
+  flex: 1 1 14rem;
+}
+
+.quick-approve-main h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.quick-approve-main p {
+  margin: 0.25rem 0 0.45rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.quick-approve-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.btn-approve {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1f8f5f, #147048);
+  color: white;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.6rem 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(20, 112, 72, 0.18);
+}
+
+.btn-approve:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 .admin-export-bar {
   margin: 0.85rem 0 0.25rem;
   padding: 0.95rem 1rem;

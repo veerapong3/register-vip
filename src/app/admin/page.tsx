@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
+import {
+  confirmAction,
+  toastError,
+  toastInfo,
+  toastSuccess,
+} from "@/lib/alerts";
 import { downloadCsv, stamp } from "@/lib/exportCsv";
 import { BASE_PRICE, SHIRT_SIZES } from "@/lib/sizes";
 
@@ -167,15 +173,25 @@ export default function AdminPage() {
       }
       setPassword("");
       await load();
+      toastSuccess("เข้าสู่ระบบสำเร็จ");
     } catch (err) {
       setAuthed(false);
-      setError(err instanceof Error ? err.message : "เข้าสู่ระบบไม่สำเร็จ");
+      const msg = err instanceof Error ? err.message : "เข้าสู่ระบบไม่สำเร็จ";
+      setError(msg);
+      toastError(msg);
     } finally {
       setLoading(false);
     }
   }
 
   async function onLogout() {
+    const ok = await confirmAction({
+      title: "ออกจากระบบ?",
+      text: "ต้องเข้าสู่ระบบใหม่เพื่อจัดการข้อมูล",
+      confirmText: "ออกจากระบบ",
+      icon: "warning",
+    });
+    if (!ok) return;
     await fetch("/api/admin/logout", {
       method: "POST",
       credentials: "same-origin",
@@ -184,6 +200,7 @@ export default function AdminPage() {
     setSchools([]);
     setRegistrations([]);
     setTotals(null);
+    toastInfo("ออกจากระบบแล้ว");
   }
 
   function exportNames() {
@@ -272,11 +289,14 @@ export default function AdminPage() {
     );
   }
 
-  async function saveSchool(school: SchoolSummary) {
+  async function persistSchoolStatus(
+    school: SchoolSummary,
+    status: PaymentStatus,
+    note: string,
+  ) {
     setSavingId(school.schoolId);
     setError(null);
     try {
-      const draft = drafts[school.schoolId];
       const res = await fetch("/api/admin/payments", {
         method: "POST",
         credentials: "same-origin",
@@ -286,27 +306,72 @@ export default function AdminPage() {
         body: JSON.stringify({
           schoolId: school.schoolId,
           schoolName: school.schoolName,
-          status: draft.status,
-          note: draft.note,
+          status,
+          note,
         }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "อัปเดตไม่สำเร็จ");
       }
+      setDrafts((prev) => ({
+        ...prev,
+        [school.schoolId]: { status, note },
+      }));
       await load();
+      toastSuccess(
+        status === "ชำระแล้ว"
+          ? `อนุมัติแล้ว · ${school.schoolName}`
+          : `บันทึกสถานะแล้ว · ${school.schoolName}`,
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "อัปเดตไม่สำเร็จ");
-      if (
-        err instanceof Error &&
-        /(รหัสผ่าน|ชื่อผู้ใช้|ไม่ถูกต้อง)/.test(err.message)
-      ) {
+      const msg = err instanceof Error ? err.message : "อัปเดตไม่สำเร็จ";
+      setError(msg);
+      toastError(msg);
+      if (/(รหัสผ่าน|ชื่อผู้ใช้|ไม่ถูกต้อง)/.test(msg)) {
         setAuthed(false);
       }
     } finally {
       setSavingId(null);
     }
   }
+
+  async function saveSchool(school: SchoolSummary) {
+    const draft = drafts[school.schoolId] || {
+      status: school.paymentStatus,
+      note: school.paymentNote,
+    };
+    const ok = await confirmAction({
+      title: "บันทึกสถานะชำระเงิน?",
+      text: `${school.schoolName} → ${draft.status}`,
+      confirmText: "บันทึก",
+      icon: draft.status === "ชำระแล้ว" ? "question" : "warning",
+    });
+    if (!ok) return;
+    await persistSchoolStatus(school, draft.status, draft.note);
+  }
+
+  async function quickApprove(school: SchoolSummary) {
+    const slip =
+      registrations.find((r) => r.schoolId === school.schoolId)?.slipUrl || "";
+    const ok = await confirmAction({
+      title: "อนุมัติชำระเงิน?",
+      text: `${school.schoolName} · ${school.totalQty} ตัว · ${school.totalAmount.toLocaleString("th-TH")} บาท${slip ? "" : " (ยังไม่พบลิงก์สลิป)"}`,
+      confirmText: "อนุมัติชำระแล้ว",
+      icon: "question",
+    });
+    if (!ok) return;
+    await persistSchoolStatus(
+      school,
+      "ชำระแล้ว",
+      drafts[school.schoolId]?.note || school.paymentNote || "อนุมัติจากภาพรวม",
+    );
+  }
+
+  const pendingSchools = useMemo(
+    () => schools.filter((s) => s.paymentStatus === "รอตรวจสอบ"),
+    [schools],
+  );
 
   if (booting) {
     return (
@@ -457,7 +522,63 @@ export default function AdminPage() {
 
       {tab === "overview" && (
         <div className="admin-section">
-          <h2 className="admin-section-title">สรุปไซส์ทั้งหมด</h2>
+          <h2 className="admin-section-title">อนุมัติเร็ว · รอตรวจสอบ</h2>
+          <div className="quick-approve-list">
+            {pendingSchools.map((school) => {
+              const order = registrations.find(
+                (r) => r.schoolId === school.schoolId,
+              );
+              const slip = order ? safeSlipHref(order.slipUrl) : null;
+              return (
+                <article key={school.schoolId} className="quick-approve-card">
+                  <div className="quick-approve-main">
+                    <h3>{school.schoolName}</h3>
+                    <p>
+                      {school.totalQty} ตัว ·{" "}
+                      {school.totalAmount.toLocaleString("th-TH")} บาท
+                      {school.registrationCount
+                        ? ` · ${school.registrationCount} รายการ`
+                        : ""}
+                    </p>
+                    <div className="school-total-sizes">
+                      {Object.entries(school.sizes).map(([size, qty]) => (
+                        <span key={size}>
+                          {size}×{qty}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="quick-approve-actions">
+                    {slip && (
+                      <a
+                        className="btn-ghost"
+                        href={slip}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        เปิดสลิป
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      className="btn-approve"
+                      disabled={savingId === school.schoolId}
+                      onClick={() => quickApprove(school)}
+                    >
+                      {savingId === school.schoolId
+                        ? "กำลังอนุมัติ..."
+                        : "อนุมัติชำระแล้ว"}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+            {pendingSchools.length === 0 && (
+              <p className="text-[var(--muted)]">ไม่มีรายการรอตรวจสอบ</p>
+            )}
+          </div>
+
+          <h2 className="admin-section-title mt-8">สรุปไซส์ทั้งหมด</h2>
           <div className="size-guide">
             {SHIRT_SIZES.map((s) =>
               sizeTotals[s.code] ? (
