@@ -59,6 +59,37 @@ export type SchoolOrderSummary = {
   registrationCount: number;
 };
 
+export type AdminRegistration = {
+  registrationId: string;
+  timestamp: string;
+  schoolId: string;
+  schoolName: string;
+  contactName: string;
+  contactPhone: string;
+  note: string;
+  slipUrl: string;
+  quantity: number;
+  totalAmount: number;
+  people: { name: string; size: string }[];
+};
+
+export type AdminDashboard = {
+  schools: SchoolOrderSummary[];
+  registrations: AdminRegistration[];
+  sizeTotals: Record<string, number>;
+  totals: {
+    schools: number;
+    shirts: number;
+    amount: number;
+    paidAmount: number;
+    pendingAmount: number;
+    paidSchools: number;
+    pendingSchools: number;
+    issueSchools: number;
+    registrations: number;
+  };
+};
+
 async function ensureHeaderRow() {
   const sheets = getSheetsClient();
   const spreadsheetId = getSheetId();
@@ -258,6 +289,89 @@ export async function getSchoolOrderSummaries(): Promise<SchoolOrderSummary[]> {
       };
     })
     .sort((a, b) => a.schoolName.localeCompare(b.schoolName, "th"));
+}
+
+export async function getAdminDashboard(): Promise<AdminDashboard> {
+  const schools = await getSchoolOrderSummaries();
+  const sheets = getSheetsClient();
+  const spreadsheetId = getSheetId();
+  const ordersRes = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "A2:O",
+  });
+
+  const byReg = new Map<string, AdminRegistration>();
+  const sizeTotals: Record<string, number> = {};
+
+  for (const row of ordersRes.data.values ?? []) {
+    const timestamp = String(row[0] || "");
+    const registrationId = String(row[1] || "").trim();
+    const schoolName = String(row[2] || "").trim();
+    const schoolId = String(row[3] || "").trim() || schoolName;
+    const contactName = String(row[4] || "");
+    const contactPhone = String(row[5] || "");
+    const personName = String(row[7] || "").trim();
+    const size = String(row[8] || "").trim();
+    const slipUrl = String(row[13] || "");
+    const note = String(row[14] || "");
+    if (!registrationId || !schoolName) continue;
+
+    if (size) sizeTotals[size] = (sizeTotals[size] || 0) + 1;
+
+    let reg = byReg.get(registrationId);
+    if (!reg) {
+      reg = {
+        registrationId,
+        timestamp,
+        schoolId,
+        schoolName,
+        contactName,
+        contactPhone,
+        note,
+        slipUrl,
+        quantity: 0,
+        totalAmount: 0,
+        people: [],
+      };
+      byReg.set(registrationId, reg);
+    }
+    if (personName && size) {
+      reg.people.push({ name: personName, size });
+      reg.quantity += 1;
+      reg.totalAmount = reg.quantity * BASE_PRICE;
+    }
+    if (!reg.slipUrl && slipUrl) reg.slipUrl = slipUrl;
+  }
+
+  const registrations = [...byReg.values()].sort((a, b) =>
+    b.timestamp.localeCompare(a.timestamp),
+  );
+
+  const paidAmount = schools
+    .filter((s) => s.paymentStatus === "ชำระแล้ว")
+    .reduce((sum, s) => sum + s.totalAmount, 0);
+  const pendingAmount = schools
+    .filter((s) => s.paymentStatus !== "ชำระแล้ว")
+    .reduce((sum, s) => sum + s.totalAmount, 0);
+
+  return {
+    schools,
+    registrations,
+    sizeTotals,
+    totals: {
+      schools: schools.length,
+      shirts: schools.reduce((s, x) => s + x.totalQty, 0),
+      amount: schools.reduce((s, x) => s + x.totalAmount, 0),
+      paidAmount,
+      pendingAmount,
+      paidSchools: schools.filter((s) => s.paymentStatus === "ชำระแล้ว").length,
+      pendingSchools: schools.filter((s) => s.paymentStatus === "รอตรวจสอบ")
+        .length,
+      issueSchools: schools.filter((s) => s.paymentStatus === "ไม่ครบ/มีปัญหา")
+        .length,
+      registrations: registrations.length,
+    },
+  };
 }
 
 export async function updateSchoolPaymentStatus(params: {

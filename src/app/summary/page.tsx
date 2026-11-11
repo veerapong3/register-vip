@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { SiteFooter } from "@/components/SiteFooter";
 import { BASE_PRICE } from "@/lib/sizes";
 
 type SchoolSummary = {
@@ -135,11 +136,7 @@ export default function SummaryPage() {
         </>
       )}
 
-      <footer className="footer">
-        โรงเรียนดอนตาลวิทยา × สพม.มุกดาหาร
-        <br />
-        ผู้ประสานงาน ผอ.บุญเลี่ยม บุญศรี และ รองฯ วีระพงศ์ ตะโกนอก · 087-946-3192
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { SchoolSelect } from "@/components/SchoolSelect";
+import { SiteFooter } from "@/components/SiteFooter";
 import type { School } from "@/lib/schools";
 import { BASE_PRICE, priceForSize, SHIRT_SIZES } from "@/lib/sizes";
 
@@ -17,14 +18,6 @@ const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "ธนาคารไท�
 const bankAccount = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "418-002259-4";
 const bankHolder =
   process.env.NEXT_PUBLIC_BANK_HOLDER || "นายวีระพงศ์ ตะโกนอก";
-
-const CONTACT_FOOTER = (
-  <>
-    โรงเรียนดอนตาลวิทยา × สพม.มุกดาหาร
-    <br />
-    ผู้ประสานงาน ผอ.บุญเลี่ยม บุญศรี และ รองฯ วีระพงศ์ ตะโกนอก · 087-946-3192
-  </>
-);
 
 export function RegistrationForm() {
   const [school, setSchool] = useState<School | null>(null);
@@ -176,7 +169,7 @@ export function RegistrationForm() {
               ดูสรุปทุกโรงเรียน
             </Link>
           </div>
-          <p className="footer mt-10">{CONTACT_FOOTER}</p>
+          <SiteFooter />
         </div>
       </div>
     );
@@ -500,7 +493,7 @@ export function RegistrationForm() {
           </button>
         </div>
 
-        <footer className="footer">{CONTACT_FOOTER}</footer>
+        <SiteFooter />
       </form>
     </>
   );
