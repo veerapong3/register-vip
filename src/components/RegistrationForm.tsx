@@ -239,24 +239,22 @@ export function RegistrationForm() {
   return (
     <>
       <section className="hero">
-        <button
-          type="button"
-          className="hero-media hero-media-btn"
-          onClick={() => setLightbox(true)}
-          aria-label="รูปแบบเสื้อและขนาด (Size)"
-        >
-          {/* ใช้ img ตรง ๆ เพื่อให้ภาพตัวอย่างโชว์แน่นอนทุกเบราว์เซอร์ */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/jersey.jpg"
-            alt="เสื้อกีฬา VIP สพม.มุกดาหาร กีฬาศึกษาสัมพันธ์ 2569"
-            className="hero-jersey-img"
-            width={1200}
-            height={1600}
-            decoding="async"
-            fetchPriority="high"
-          />
-        </button>
+        <div
+          className="hero-media"
+          style={{ backgroundImage: "url('/jersey-vip.jpg')" }}
+          role="img"
+          aria-label="เสื้อกีฬา VIP สพม.มุกดาหาร กีฬาศึกษาสัมพันธ์ 2569"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/jersey-vip.jpg"
+          alt="เสื้อกีฬา VIP สพม.มุกดาหาร กีฬาศึกษาสัมพันธ์ 2569"
+          className="hero-jersey-img"
+          width={1024}
+          height={1024}
+          decoding="async"
+          fetchPriority="high"
+        />
         <div className="hero-shade" />
         <div className="hero-content">
           <p className="anim-fade text-sm font-medium tracking-[0.2em] text-white/80 uppercase">
@@ -304,7 +302,7 @@ export function RegistrationForm() {
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/jersey.jpg"
+            src="/jersey-vip.jpg"
             alt="เสื้อกีฬา VIP ขนาดเต็ม"
             className="lightbox-img"
             onClick={(e) => e.stopPropagation()}
@@ -313,6 +311,31 @@ export function RegistrationForm() {
       )}
 
       <form id="register" onSubmit={onSubmit} className="shell">
+        <section className="jersey-preview-panel">
+          <div className="jersey-preview-copy">
+            <p className="step-kicker">ตัวอย่างเสื้อ</p>
+            <h2 className="step-title">รูปแบบเสื้อและขนาด (Size)</h2>
+            <p className="step-desc mb-0">
+              กดที่รูปเพื่อขยายดูแบบเต็ม · ราคาเดียวทุกไซส์ ตัวละ {BASE_PRICE} บาท
+            </p>
+          </div>
+          <button
+            type="button"
+            className="jersey-preview-btn"
+            onClick={() => setLightbox(true)}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/jersey.jpg"
+              alt="ตัวอย่างเสื้อ VIP"
+              className="jersey-preview-img"
+              width={1024}
+              height={1024}
+              loading="eager"
+            />
+          </button>
+        </section>
+
         <section className="step-panel step-school">
           <div className="step-panel-head">
             <span className="step-num">1</span>
