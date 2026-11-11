@@ -94,10 +94,6 @@ export default function SummaryPage() {
               <strong>{data.totals.shirts} ตัว</strong>
             </div>
             <div>
-              <span>ยอดรวม</span>
-              <strong>{data.totals.amount.toLocaleString("th-TH")} ฿</strong>
-            </div>
-            <div>
               <span>รอตรวจชำระ</span>
               <strong>{data.totals.pendingSchools} รร.</strong>
             </div>
@@ -112,10 +108,7 @@ export default function SummaryPage() {
                     {school.paymentStatus}
                   </span>
                 </div>
-                <p className="summary-amount">
-                  {school.totalQty} ตัว ·{" "}
-                  {school.totalAmount.toLocaleString("th-TH")} บาท
-                </p>
+                <p className="summary-amount">{school.totalQty} ตัว</p>
                 <div className="size-guide">
                   {Object.entries(school.sizes).map(([size, qty]) => (
                     <div key={size} className="size-pill">
