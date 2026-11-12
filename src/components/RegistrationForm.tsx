@@ -181,9 +181,9 @@ export function RegistrationForm() {
         quantity: data.quantity!,
         totalAmount: data.totalAmount!,
       });
-      toastSuccess("ลงทะเบียนสำเร็จ");
+      toastSuccess("รับรายการจองแล้ว");
       await alertSuccess(
-        "ลงทะเบียนสำเร็จ",
+        "รับรายการจองแล้ว",
         `รหัสรายการ ${data.registrationId} · ${data.quantity} ตัว`,
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -200,10 +200,10 @@ export function RegistrationForm() {
     return (
       <div className="success-wrap">
         <div className="anim-fade">
-          <p className="step-kicker">ลงทะเบียนสำเร็จ</p>
-          <h1 className="font-display">ขอบคุณครับ</h1>
+          <p className="step-kicker">ส่งข้อมูลสำเร็จ</p>
+          <h1 className="font-display">รับรายการจองแล้ว</h1>
           <p className="text-[var(--muted)]">
-            รหัสรายการ{" "}
+            ระบบบันทึกข้อมูลเรียบร้อย · รหัสรายการ{" "}
             <strong className="text-[var(--ink)]">{success.registrationId}</strong>
           </p>
           <div className="success-meta">
