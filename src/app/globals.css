@@ -310,6 +310,35 @@ body {
   }
 }
 
+.no-jersey-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.no-jersey-option input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--pink-deep);
+}
+
+.person-jersey:disabled {
+  background: #f3f0f1;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.admin-edit-jersey {
+  display: grid;
+  gap: 0.25rem;
+}
+
 .person-jersey {
   text-align: center;
   font-weight: 800;

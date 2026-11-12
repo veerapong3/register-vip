@@ -43,6 +43,22 @@ type Registration = {
   people: { name: string; jerseyNumber: string; size: string }[];
 };
 
+type EditPerson = {
+  name: string;
+  jerseyNumber: string;
+  size: string;
+  noJersey: boolean;
+};
+
+function isNoJersey(value: string) {
+  const v = String(value || "").trim();
+  return !v || v === "-" || v === "ไม่มี";
+}
+
+function formatJersey(value: string) {
+  return isNoJersey(value) ? "ไม่เอาเบอร์" : `#${value.trim()}`;
+}
+
 type Totals = {
   schools: number;
   shirts: number;
@@ -109,9 +125,7 @@ export default function AdminPage() {
   const [editContactName, setEditContactName] = useState("");
   const [editContactPhone, setEditContactPhone] = useState("");
   const [editNote, setEditNote] = useState("");
-  const [editPeople, setEditPeople] = useState<
-    { name: string; jerseyNumber: string; size: string }[]
-  >([]);
+  const [editPeople, setEditPeople] = useState<EditPerson[]>([]);
   const [editSaving, setEditSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -234,7 +248,7 @@ export default function AdminPage() {
           r.contactPhone,
           i + 1,
           p.name,
-          p.jerseyNumber || "",
+          isNoJersey(p.jerseyNumber) ? "ไม่มี" : p.jerseyNumber || "",
           p.size,
           BASE_PRICE,
           r.slipUrl,
@@ -376,11 +390,15 @@ export default function AdminPage() {
     setEditContactPhone(reg.contactPhone);
     setEditNote(reg.note || "");
     setEditPeople(
-      reg.people.map((p) => ({
-        name: p.name,
-        jerseyNumber: p.jerseyNumber || "",
-        size: p.size,
-      })),
+      reg.people.map((p) => {
+        const noJersey = isNoJersey(p.jerseyNumber);
+        return {
+          name: p.name,
+          jerseyNumber: noJersey ? "" : p.jerseyNumber || "",
+          size: p.size,
+          noJersey,
+        };
+      }),
     );
   }
 
@@ -389,10 +407,7 @@ export default function AdminPage() {
     setEditing(null);
   }
 
-  function updateEditPerson(
-    index: number,
-    patch: Partial<{ name: string; jerseyNumber: string; size: string }>,
-  ) {
+  function updateEditPerson(index: number, patch: Partial<EditPerson>) {
     setEditPeople((prev) =>
       prev.map((p, i) => (i === index ? { ...p, ...patch } : p)),
     );
@@ -401,7 +416,7 @@ export default function AdminPage() {
   function addEditPerson() {
     setEditPeople((prev) => [
       ...prev,
-      { name: "", jerseyNumber: "", size: "L" },
+      { name: "", jerseyNumber: "", size: "L", noJersey: false },
     ]);
   }
 
@@ -419,6 +434,10 @@ export default function AdminPage() {
     }
     if (editPeople.some((p) => !p.name.trim() || !p.size)) {
       toastError("กรุณากรอกชื่อและไซส์ให้ครบทุกคน");
+      return;
+    }
+    if (editPeople.some((p) => !p.noJersey && !p.jerseyNumber.trim())) {
+      toastError("กรุณากรอกเบอร์หลังเสื้อ หรือเลือกไม่เอาเบอร์");
       return;
     }
     const ok = await confirmAction({
@@ -444,7 +463,8 @@ export default function AdminPage() {
           note: editNote.trim(),
           people: editPeople.map((p) => ({
             name: p.name.trim(),
-            jerseyNumber: p.jerseyNumber.trim(),
+            jerseyNumber: p.noJersey ? "" : p.jerseyNumber.trim(),
+            noJersey: p.noJersey,
             size: p.size,
           })),
         }),
@@ -848,7 +868,7 @@ export default function AdminPage() {
                           {o.people
                             .map(
                               (p) =>
-                                `${p.name} #${p.jerseyNumber || "-"} (${p.size})`,
+                                `${p.name} ${formatJersey(p.jerseyNumber)} (${p.size})`,
                             )
                             .join(" · ")}
                         </p>
@@ -965,7 +985,7 @@ export default function AdminPage() {
               <ul className="admin-people">
                 {r.people.map((p, i) => (
                   <li key={`${r.registrationId}-${i}`}>
-                    {i + 1}. {p.name} · เบอร์ {p.jerseyNumber || "-"} · ไซส์{" "}
+                    {i + 1}. {p.name} · {formatJersey(p.jerseyNumber)} · ไซส์{" "}
                     {p.size} · {BASE_PRICE} ฿
                   </li>
                 ))}
@@ -1088,14 +1108,38 @@ export default function AdminPage() {
                       updateEditPerson(i, { name: e.target.value })
                     }
                   />
-                  <input
-                    className="field field-solid"
-                    placeholder="เบอร์เสื้อ"
-                    value={p.jerseyNumber}
-                    onChange={(e) =>
-                      updateEditPerson(i, { jerseyNumber: e.target.value })
-                    }
-                  />
+                  <div className="admin-edit-jersey">
+                    <input
+                      className="field field-solid"
+                      placeholder={p.noJersey ? "ไม่เอาเบอร์" : "เบอร์เสื้อ"}
+                      value={p.noJersey ? "" : p.jerseyNumber}
+                      disabled={p.noJersey}
+                      onChange={(e) =>
+                        updateEditPerson(i, {
+                          noJersey: false,
+                          jerseyNumber: e.target.value
+                            .toUpperCase()
+                            .replace(/[^0-9A-Za-z]/g, "")
+                            .slice(0, 3),
+                        })
+                      }
+                    />
+                    <label className="no-jersey-option">
+                      <input
+                        type="checkbox"
+                        checked={p.noJersey}
+                        onChange={(e) =>
+                          updateEditPerson(i, {
+                            noJersey: e.target.checked,
+                            jerseyNumber: e.target.checked
+                              ? ""
+                              : p.jerseyNumber,
+                          })
+                        }
+                      />
+                      <span>ไม่เอาเบอร์</span>
+                    </label>
+                  </div>
                   <select
                     className="field field-solid"
                     value={p.size}

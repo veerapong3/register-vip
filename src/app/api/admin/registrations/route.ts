@@ -35,6 +35,7 @@ export async function PUT(req: Request) {
       people?: {
         name?: string;
         jerseyNumber?: string;
+        noJersey?: boolean;
         size?: string;
       }[];
     };
@@ -90,12 +91,19 @@ export async function PUT(req: Request) {
 
     const people = peopleRaw.map((p, i) => {
       const name = String(p.name || "").trim().slice(0, 120);
-      const jerseyNumber = normalizeJerseyNumber(
-        String(p.jerseyNumber || ""),
-      ).slice(0, 10);
+      const noJersey =
+        Boolean(p.noJersey) || !String(p.jerseyNumber || "").trim();
+      const jerseyNumber = noJersey
+        ? "ไม่มี"
+        : normalizeJerseyNumber(String(p.jerseyNumber || "")).slice(0, 3);
       const size = String(p.size || "").trim();
       if (!name) {
         throw new Error(`กรุณากรอกชื่อผู้สวมใส่คนที่ ${i + 1}`);
+      }
+      if (!noJersey && jerseyNumber && !/^[0-9A-Z]{1,3}$/.test(jerseyNumber)) {
+        throw new Error(
+          `เบอร์หลังเสื้อของคนที่ ${i + 1} ต้องเป็นตัวเลข/ตัวอักษร ไม่เกิน 3 ตัว`,
+        );
       }
       if (!SIZE_CODES.has(size)) {
         throw new Error(`ไซส์ไม่ถูกต้องที่คนที่ ${i + 1}`);

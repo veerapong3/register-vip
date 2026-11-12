@@ -13,10 +13,25 @@ import {
 import type { School } from "@/lib/schools";
 import { BASE_PRICE, priceForSize, SHIRT_SIZES } from "@/lib/sizes";
 
-type Person = { id: string; name: string; jerseyNumber: string; size: string };
+type Person = {
+  id: string;
+  name: string;
+  jerseyNumber: string;
+  size: string;
+  noJersey: boolean;
+};
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
+}
+
+function emptyPerson(): Person {
+  return { id: uid(), name: "", jerseyNumber: "", size: "L", noJersey: false };
+}
+
+function jerseyLabel(person: Pick<Person, "jerseyNumber" | "noJersey">) {
+  if (person.noJersey || !person.jerseyNumber.trim()) return "ไม่เอาเบอร์";
+  return `#${person.jerseyNumber.trim()}`;
 }
 
 const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "ธนาคารไทยพาณิชย์";
@@ -29,9 +44,7 @@ export function RegistrationForm() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [note, setNote] = useState("");
-  const [people, setPeople] = useState<Person[]>([
-    { id: uid(), name: "", jerseyNumber: "", size: "L" },
-  ]);
+  const [people, setPeople] = useState<Person[]>([emptyPerson()]);
   const [slip, setSlip] = useState<File | null>(null);
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState(false);
@@ -71,10 +84,7 @@ export function RegistrationForm() {
   }
 
   function addPerson() {
-    setPeople((prev) => [
-      ...prev,
-      { id: uid(), name: "", jerseyNumber: "", size: "L" },
-    ]);
+    setPeople((prev) => [...prev, emptyPerson()]);
   }
 
   function removePerson(id: string) {
@@ -108,9 +118,9 @@ export function RegistrationForm() {
       toastError("กรุณากรอกชื่อผู้สวมใส่ให้ครบ");
       return;
     }
-    if (people.some((p) => !p.jerseyNumber.trim())) {
-      setError("กรุณากรอกเบอร์หลังเสื้อให้ครบทุกคน");
-      toastError("กรุณากรอกเบอร์หลังเสื้อให้ครบทุกคน");
+    if (people.some((p) => !p.noJersey && !p.jerseyNumber.trim())) {
+      setError("กรุณากรอกเบอร์หลังเสื้อ หรือเลือกไม่เอาเบอร์");
+      toastError("กรุณากรอกเบอร์หลังเสื้อ หรือเลือกไม่เอาเบอร์");
       return;
     }
     if (!slip) {
@@ -120,10 +130,7 @@ export function RegistrationForm() {
     }
 
     const peopleLine = people
-      .map(
-        (p) =>
-          `${p.name.trim()} (#${p.jerseyNumber.trim()} · ${p.size})`,
-      )
+      .map((p) => `${p.name.trim()} (${jerseyLabel(p)} · ${p.size})`)
       .join(" · ");
 
     const ok = await confirmAction({
@@ -148,7 +155,8 @@ export function RegistrationForm() {
         JSON.stringify(
           people.map((p) => ({
             name: p.name.trim(),
-            jerseyNumber: p.jerseyNumber.trim(),
+            jerseyNumber: p.noJersey ? "" : p.jerseyNumber.trim(),
+            noJersey: p.noJersey,
             size: p.size,
           })),
         ),
@@ -216,7 +224,7 @@ export function RegistrationForm() {
               className="hero-cta"
               onClick={() => {
                 setSuccess(null);
-                setPeople([{ id: uid(), name: "", jerseyNumber: "", size: "L" }]);
+                setPeople([emptyPerson()]);
                 setContactName("");
                 setContactPhone("");
                 setNote("");
@@ -381,7 +389,8 @@ export function RegistrationForm() {
               <h2 className="step-title">เพิ่มรายชื่อ เบอร์หลังเสื้อ และไซส์</h2>
               <p className="step-desc mb-0">
                 กรอกคนที่ 1 ก่อน แล้วกดเพิ่มคนที่ 2, 3, 4… ด้านล่าง · ตัวละ{" "}
-                {BASE_PRICE}
+                {BASE_PRICE} · ถ้าไม่ต้องการเบอร์หลังเสื้อ ให้ติ๊ก
+                “ไม่เอาเบอร์หลังเสื้อ”
               </p>
             </div>
           </div>
@@ -427,20 +436,39 @@ export function RegistrationForm() {
                     <label className="field-label">เบอร์หลังเสื้อ</label>
                     <input
                       className="field field-solid person-jersey"
-                      value={person.jerseyNumber}
+                      value={person.noJersey ? "" : person.jerseyNumber}
                       onChange={(e) =>
                         updatePerson(person.id, {
+                          noJersey: false,
                           jerseyNumber: e.target.value
                             .toUpperCase()
                             .replace(/[^0-9A-Za-z]/g, "")
                             .slice(0, 3),
                         })
                       }
-                      placeholder="เช่น 7, 10, 99"
+                      placeholder={
+                        person.noJersey ? "ไม่เอาเบอร์" : "เช่น 7, 10, 99"
+                      }
                       inputMode="numeric"
                       maxLength={3}
-                      required
+                      disabled={person.noJersey}
+                      required={!person.noJersey}
                     />
+                    <label className="no-jersey-option">
+                      <input
+                        type="checkbox"
+                        checked={person.noJersey}
+                        onChange={(e) =>
+                          updatePerson(person.id, {
+                            noJersey: e.target.checked,
+                            jerseyNumber: e.target.checked
+                              ? ""
+                              : person.jerseyNumber,
+                          })
+                        }
+                      />
+                      <span>ไม่เอาเบอร์หลังเสื้อ</span>
+                    </label>
                   </div>
                 </div>
                 <div>

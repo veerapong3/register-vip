@@ -12,6 +12,7 @@ export const maxDuration = 60;
 type PersonInput = {
   name: string;
   jerseyNumber: string;
+  noJersey?: boolean;
   size: string;
 };
 
@@ -117,22 +118,29 @@ export async function POST(req: Request) {
     const validCodes = new Set(SHIRT_SIZES.map((s) => s.code));
     const cleaned = people.map((p, i) => {
       const name = String(p?.name || "").trim().slice(0, 120);
-      const jerseyNumber = normalizeJerseyNumber(String(p?.jerseyNumber || "")).slice(
-        0,
-        3,
-      );
+      const noJersey = Boolean(p?.noJersey) || !String(p?.jerseyNumber || "").trim();
+      const jerseyNumber = noJersey
+        ? ""
+        : normalizeJerseyNumber(String(p?.jerseyNumber || "")).slice(0, 3);
       const size = String(p?.size || "").trim();
       if (!name) throw new Error(`กรุณากรอกชื่อคนที่ ${i + 1}`);
-      if (!jerseyNumber) {
-        throw new Error(`กรุณากรอกเบอร์หลังเสื้อของคนที่ ${i + 1}`);
+      if (!noJersey && !jerseyNumber) {
+        throw new Error(
+          `กรุณากรอกเบอร์หลังเสื้อของคนที่ ${i + 1} หรือเลือกไม่เอาเบอร์`,
+        );
       }
-      if (!/^[0-9A-Z]{1,3}$/.test(jerseyNumber)) {
+      if (jerseyNumber && !/^[0-9A-Z]{1,3}$/.test(jerseyNumber)) {
         throw new Error(
           `เบอร์หลังเสื้อของคนที่ ${i + 1} ต้องเป็นตัวเลข/ตัวอักษร ไม่เกิน 3 ตัว`,
         );
       }
       if (!validCodes.has(size)) throw new Error(`ไซส์ของคนที่ ${i + 1} ไม่ถูกต้อง`);
-      return { name, jerseyNumber, size, price: priceForSize(size) };
+      return {
+        name,
+        jerseyNumber: jerseyNumber || "ไม่มี",
+        size,
+        price: priceForSize(size),
+      };
     });
 
     if (!(slip instanceof File) || slip.size === 0) {
