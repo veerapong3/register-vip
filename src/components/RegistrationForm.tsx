@@ -30,7 +30,7 @@ function emptyPerson(): Person {
 }
 
 function jerseyLabel(person: Pick<Person, "jerseyNumber" | "noJersey">) {
-  if (person.noJersey || !person.jerseyNumber.trim()) return "ไม่เอาเบอร์";
+  if (person.noJersey || !person.jerseyNumber.trim()) return "ไม่ใส่เบอร์";
   return `#${person.jerseyNumber.trim()}`;
 }
 
@@ -119,8 +119,8 @@ export function RegistrationForm() {
       return;
     }
     if (people.some((p) => !p.noJersey && !p.jerseyNumber.trim())) {
-      setError("กรุณากรอกเบอร์หลังเสื้อ หรือเลือกไม่เอาเบอร์");
-      toastError("กรุณากรอกเบอร์หลังเสื้อ หรือเลือกไม่เอาเบอร์");
+      setError("กรุณากรอกเบอร์หลังเสื้อ หรือเลือกไม่ใส่เบอร์");
+      toastError("กรุณากรอกเบอร์หลังเสื้อ หรือเลือกไม่ใส่เบอร์");
       return;
     }
     if (!slip) {
@@ -390,7 +390,7 @@ export function RegistrationForm() {
               <p className="step-desc mb-0">
                 กรอกคนที่ 1 ก่อน แล้วกดเพิ่มคนที่ 2, 3, 4… ด้านล่าง · ตัวละ{" "}
                 {BASE_PRICE} · ถ้าไม่ต้องการเบอร์หลังเสื้อ ให้ติ๊ก
-                “ไม่เอาเบอร์หลังเสื้อ”
+                “ไม่ใส่เบอร์”
               </p>
             </div>
           </div>
@@ -447,7 +447,7 @@ export function RegistrationForm() {
                         })
                       }
                       placeholder={
-                        person.noJersey ? "ไม่เอาเบอร์" : "เช่น 7, 10, 99"
+                        person.noJersey ? "ไม่ใส่เบอร์" : "เช่น 7, 10, 99"
                       }
                       inputMode="numeric"
                       maxLength={3}
@@ -467,7 +467,7 @@ export function RegistrationForm() {
                           })
                         }
                       />
-                      <span>ไม่เอาเบอร์หลังเสื้อ</span>
+                      <span>ไม่ใส่เบอร์</span>
                     </label>
                   </div>
                 </div>

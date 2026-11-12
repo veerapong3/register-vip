@@ -94,7 +94,7 @@ export async function PUT(req: Request) {
       const noJersey =
         Boolean(p.noJersey) || !String(p.jerseyNumber || "").trim();
       const jerseyNumber = noJersey
-        ? "ไม่มี"
+        ? "ไม่ใส่เบอร์"
         : normalizeJerseyNumber(String(p.jerseyNumber || "")).slice(0, 3);
       const size = String(p.size || "").trim();
       if (!name) {

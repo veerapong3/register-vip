@@ -52,11 +52,11 @@ type EditPerson = {
 
 function isNoJersey(value: string) {
   const v = String(value || "").trim();
-  return !v || v === "-" || v === "ไม่มี";
+  return !v || v === "-" || v === "ไม่มี" || v === "ไม่ใส่เบอร์";
 }
 
 function formatJersey(value: string) {
-  return isNoJersey(value) ? "ไม่เอาเบอร์" : `#${value.trim()}`;
+  return isNoJersey(value) ? "ไม่ใส่เบอร์" : `#${value.trim()}`;
 }
 
 type Totals = {
@@ -248,7 +248,7 @@ export default function AdminPage() {
           r.contactPhone,
           i + 1,
           p.name,
-          isNoJersey(p.jerseyNumber) ? "ไม่มี" : p.jerseyNumber || "",
+          isNoJersey(p.jerseyNumber) ? "ไม่ใส่เบอร์" : p.jerseyNumber || "",
           p.size,
           BASE_PRICE,
           r.slipUrl,
@@ -437,7 +437,7 @@ export default function AdminPage() {
       return;
     }
     if (editPeople.some((p) => !p.noJersey && !p.jerseyNumber.trim())) {
-      toastError("กรุณากรอกเบอร์หลังเสื้อ หรือเลือกไม่เอาเบอร์");
+      toastError("กรุณากรอกเบอร์หลังเสื้อ หรือเลือกไม่ใส่เบอร์");
       return;
     }
     const ok = await confirmAction({
@@ -1111,7 +1111,7 @@ export default function AdminPage() {
                   <div className="admin-edit-jersey">
                     <input
                       className="field field-solid"
-                      placeholder={p.noJersey ? "ไม่เอาเบอร์" : "เบอร์เสื้อ"}
+                      placeholder={p.noJersey ? "ไม่ใส่เบอร์" : "เบอร์เสื้อ"}
                       value={p.noJersey ? "" : p.jerseyNumber}
                       disabled={p.noJersey}
                       onChange={(e) =>
@@ -1137,7 +1137,7 @@ export default function AdminPage() {
                           })
                         }
                       />
-                      <span>ไม่เอาเบอร์</span>
+                      <span>ไม่ใส่เบอร์</span>
                     </label>
                   </div>
                   <select

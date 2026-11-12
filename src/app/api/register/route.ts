@@ -126,7 +126,7 @@ export async function POST(req: Request) {
       if (!name) throw new Error(`กรุณากรอกชื่อคนที่ ${i + 1}`);
       if (!noJersey && !jerseyNumber) {
         throw new Error(
-          `กรุณากรอกเบอร์หลังเสื้อของคนที่ ${i + 1} หรือเลือกไม่เอาเบอร์`,
+          `กรุณากรอกเบอร์หลังเสื้อของคนที่ ${i + 1} หรือเลือกไม่ใส่เบอร์`,
         );
       }
       if (jerseyNumber && !/^[0-9A-Z]{1,3}$/.test(jerseyNumber)) {
@@ -137,7 +137,7 @@ export async function POST(req: Request) {
       if (!validCodes.has(size)) throw new Error(`ไซส์ของคนที่ ${i + 1} ไม่ถูกต้อง`);
       return {
         name,
-        jerseyNumber: jerseyNumber || "ไม่มี",
+        jerseyNumber: jerseyNumber || "ไม่ใส่เบอร์",
         size,
         price: priceForSize(size),
       };
