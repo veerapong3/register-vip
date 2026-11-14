@@ -87,7 +87,7 @@ export type BookingSettings = {
 };
 
 export const DEFAULT_BOOKING_CLOSED_MESSAGE =
-  "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ";
+  "ขณะนี้ปิดจองแล้ว กรุณาติดต่อผู้ดูแลระบบ";
 
 export type AdminDashboard = {
   schools: SchoolOrderSummary[];
@@ -264,10 +264,17 @@ export async function getBookingSettings(): Promise<BookingSettings> {
 
   const openRow = map.get("bookingOpen");
   const messageRow = map.get("bookingMessage");
+  const rawMessage = String(messageRow?.value || "").trim();
+  const legacyDefaults = new Set([
+    "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ",
+    "ขณะนี้ปิดรับจองเสื้อชั่วคราว",
+  ]);
   return {
     open: parseBool(openRow?.value || "", true),
     message:
-      String(messageRow?.value || "").trim() || DEFAULT_BOOKING_CLOSED_MESSAGE,
+      !rawMessage || legacyDefaults.has(rawMessage)
+        ? DEFAULT_BOOKING_CLOSED_MESSAGE
+        : rawMessage,
     updatedAt: openRow?.updatedAt || messageRow?.updatedAt || "",
   };
 }

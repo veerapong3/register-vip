@@ -78,9 +78,8 @@ export function RegistrationForm() {
           setBookingMessage(message);
           if (!open) {
             await alertWarning(
-              "ปิดรับจองชั่วคราว",
-              message ||
-                "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ",
+              "ปิดจอง",
+              message || "ขณะนี้ปิดจองแล้ว กรุณาติดต่อผู้ดูแลระบบ",
             );
           }
         }
@@ -144,7 +143,7 @@ export function RegistrationForm() {
 
     if (!bookingOpen) {
       const msg =
-        bookingMessage || "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ";
+        bookingMessage || "ขณะนี้ปิดจองแล้ว กรุณาติดต่อผู้ดูแลระบบ";
       setError(msg);
       toastError(msg);
       return;
@@ -244,8 +243,7 @@ export function RegistrationForm() {
   }
 
   const closedText =
-    bookingMessage ||
-    "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ";
+    bookingMessage || "ขณะนี้ปิดจองแล้ว กรุณาติดต่อผู้ดูแลระบบ";
 
   if (success) {
     return (
@@ -299,7 +297,7 @@ export function RegistrationForm() {
     <>
       {!bookingLoading && !bookingOpen && (
         <div className="booking-closed-topbar" role="status">
-          <strong>ปิดรับจองชั่วคราว</strong>
+          <strong>ปิดจอง</strong>
           <span>{closedText}</span>
         </div>
       )}
@@ -335,8 +333,8 @@ export function RegistrationForm() {
           </p>
           {!bookingLoading && !bookingOpen && (
             <div className="booking-closed-banner anim-fade anim-delay-2">
-              <span className="booking-closed-badge">ปิดรับจอง</span>
-              <strong>ระบบปิดรับจองชั่วคราว</strong>
+              <span className="booking-closed-badge">ปิดจอง</span>
+              <strong>ระบบปิดจอง</strong>
               <p>{closedText}</p>
             </div>
           )}
@@ -353,7 +351,7 @@ export function RegistrationForm() {
                 เริ่มลงทะเบียน
               </a>
             ) : (
-              <span className="hero-cta hero-cta-disabled">ปิดรับจองชั่วคราว</span>
+              <span className="hero-cta hero-cta-disabled">ปิดจอง</span>
             )}
             <Link href="/summary" className="hero-cta hero-cta-ghost">
               สรุปออเดอร์
@@ -414,9 +412,9 @@ export function RegistrationForm() {
 
         {!bookingLoading && !bookingOpen ? (
           <section className="step-panel booking-closed-panel">
-            <span className="booking-closed-badge">ปิดรับจอง</span>
+            <span className="booking-closed-badge">ปิดจอง</span>
             <p className="step-kicker">ระบบจอง</p>
-            <h2 className="step-title">ปิดรับจองชั่วคราว</h2>
+            <h2 className="step-title">ปิดจอง</h2>
             <p className="booking-closed-message">{closedText}</p>
             <p className="step-desc mb-0">
               ไม่สามารถส่งรายการจองใหม่ได้ในขณะนี้ · สามารถดูสรุปออเดอร์ได้ตามปกติ
@@ -429,7 +427,7 @@ export function RegistrationForm() {
                 type="button"
                 className="btn-ghost"
                 onClick={() =>
-                  alertWarning("ปิดรับจองชั่วคราว", closedText)
+                  alertWarning("ปิดจอง", closedText)
                 }
               >
                 ดูข้อความอีกครั้ง

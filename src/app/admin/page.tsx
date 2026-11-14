@@ -422,11 +422,11 @@ export default function AdminPage() {
   async function toggleBooking() {
     const nextOpen = !bookingOpen;
     const ok = await confirmAction({
-      title: nextOpen ? "เปิดรับจองเสื้อ?" : "ปิดรับจองเสื้อ?",
+      title: nextOpen ? "เปิดจองเสื้อ?" : "ปิดจองเสื้อ?",
       text: nextOpen
         ? "ผู้ใช้จะสามารถลงทะเบียนจองเสื้อได้อีกครั้ง"
-        : "หน้าลงทะเบียนจะแสดงว่าปิดรับจอง และ API จะปฏิเสธการส่งใหม่",
-      confirmText: nextOpen ? "เปิดระบบจอง" : "ปิดระบบจอง",
+        : "หน้าลงทะเบียนจะแสดงว่าปิดจอง และ API จะปฏิเสธการส่งใหม่",
+      confirmText: nextOpen ? "เปิดจอง" : "ปิดจอง",
       icon: "warning",
     });
     if (!ok) return;
@@ -450,7 +450,7 @@ export default function AdminPage() {
       setBookingOpen(Boolean(data.booking?.open));
       setBookingMessage(String(data.booking?.message || "").trim());
       toastSuccess(
-        data.booking?.open ? "เปิดรับจองแล้ว" : "ปิดรับจองแล้ว",
+        data.booking?.open ? "เปิดจองแล้ว" : "ปิดจองแล้ว",
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : "อัปเดตระบบจองไม่สำเร็จ";
@@ -649,7 +649,7 @@ export default function AdminPage() {
           <span
             className={`booking-status-chip ${bookingOpen ? "is-open" : "is-closed"}`}
           >
-            {bookingOpen ? "เปิดรับจอง" : "ปิดรับจอง"}
+            {bookingOpen ? "เปิดจอง" : "ปิดจอง"}
           </span>
         </div>
         <div className="admin-topbar-actions">
@@ -662,8 +662,8 @@ export default function AdminPage() {
             {bookingSaving
               ? "กำลังบันทึก..."
               : bookingOpen
-                ? "ปิดระบบจอง"
-                : "เปิดระบบจอง"}
+                ? "ปิดจอง"
+                : "เปิดจอง"}
           </button>
           <button
             type="button"
@@ -777,7 +777,7 @@ export default function AdminPage() {
               <h2 className="admin-section-title mb-0">ระบบจองเสื้อ</h2>
               <p className="admin-meta mb-0">
                 สถานะปัจจุบัน:{" "}
-                <strong>{bookingOpen ? "เปิดรับจอง" : "ปิดรับจอง"}</strong>
+                <strong>{bookingOpen ? "เปิดจอง" : "ปิดจอง"}</strong>
                 {bookingMessage && !bookingOpen
                   ? ` · ${bookingMessage}`
                   : ""}
@@ -788,7 +788,7 @@ export default function AdminPage() {
                 className="field field-solid"
                 value={bookingMessage}
                 onChange={(e) => setBookingMessage(e.target.value)}
-                placeholder="ข้อความตอนปิดรับจอง (ถ้ามี)"
+                placeholder="ข้อความตอนปิดจอง (ถ้ามี)"
                 disabled={bookingSaving}
               />
               <button
@@ -800,8 +800,8 @@ export default function AdminPage() {
                 {bookingSaving
                   ? "กำลังบันทึก..."
                   : bookingOpen
-                    ? "ปิดระบบจอง"
-                    : "เปิดระบบจอง"}
+                    ? "ปิดจอง"
+                    : "เปิดจอง"}
               </button>
             </div>
           </div>

@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           ok: false,
-          error: booking.message || "ขณะนี้ปิดรับจองเสื้อชั่วคราว",
+          error: booking.message || "ขณะนี้ปิดจองแล้ว",
           closed: true,
         },
         { status: 403 },
