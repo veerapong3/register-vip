@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SchoolSelect } from "@/components/SchoolSelect";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
@@ -50,11 +50,40 @@ export function RegistrationForm() {
   const [lightbox, setLightbox] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(true);
+  const [bookingMessage, setBookingMessage] = useState("");
+  const [bookingLoading, setBookingLoading] = useState(true);
   const [success, setSuccess] = useState<{
     registrationId: string;
     quantity: number;
     totalAmount: number;
   } | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/booking-status", { cache: "no-store" });
+        const data = (await res.json()) as {
+          ok?: boolean;
+          open?: boolean;
+          message?: string;
+        };
+        if (!alive) return;
+        if (data.ok) {
+          setBookingOpen(data.open !== false);
+          setBookingMessage(String(data.message || "").trim());
+        }
+      } catch {
+        // keep default open if status check fails; API still enforces
+      } finally {
+        if (alive) setBookingLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const total = useMemo(() => people.length * BASE_PRICE, [people.length]);
 
@@ -102,6 +131,14 @@ export function RegistrationForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!bookingOpen) {
+      const msg =
+        bookingMessage || "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ";
+      setError(msg);
+      toastError(msg);
+      return;
+    }
 
     if (!school) {
       setError("กรุณาเลือกโรงเรียน");
@@ -276,6 +313,12 @@ export function RegistrationForm() {
           <p className="price-tag anim-fade anim-delay-2">
             ตัวละ {BASE_PRICE}
           </p>
+          {!bookingLoading && !bookingOpen && (
+            <p className="booking-closed-banner anim-fade anim-delay-2">
+              {bookingMessage ||
+                "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ"}
+            </p>
+          )}
           <div className="hero-actions anim-fade anim-delay-3">
             <button
               type="button"
@@ -284,9 +327,13 @@ export function RegistrationForm() {
             >
               รูปแบบเสื้อและขนาด (Size)
             </button>
-            <a href="#register" className="hero-cta">
-              เริ่มลงทะเบียน
-            </a>
+            {bookingOpen ? (
+              <a href="#register" className="hero-cta">
+                เริ่มลงทะเบียน
+              </a>
+            ) : (
+              <span className="hero-cta hero-cta-disabled">ปิดรับจองชั่วคราว</span>
+            )}
             <Link href="/summary" className="hero-cta hero-cta-ghost">
               สรุปออเดอร์
             </Link>
@@ -344,6 +391,22 @@ export function RegistrationForm() {
           </button>
         </section>
 
+        {!bookingLoading && !bookingOpen ? (
+          <section className="step-panel booking-closed-panel">
+            <p className="step-kicker">ระบบจอง</p>
+            <h2 className="step-title">ปิดรับจองชั่วคราว</h2>
+            <p className="step-desc mb-0">
+              {bookingMessage ||
+                "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ"}
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href="/summary" className="btn-ghost">
+                ดูสรุปออเดอร์
+              </Link>
+            </div>
+          </section>
+        ) : (
+          <>
         <section className="step-panel step-school">
           <div className="step-panel-head">
             <span className="step-num">1</span>
@@ -628,6 +691,8 @@ export function RegistrationForm() {
             {submitting ? "กำลังบันทึก..." : "ยืนยันลงทะเบียน"}
           </button>
         </div>
+          </>
+        )}
 
         <SiteFooter />
       </form>

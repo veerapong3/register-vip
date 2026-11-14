@@ -134,6 +134,9 @@ export default function AdminPage() {
   const [editNote, setEditNote] = useState("");
   const [editPeople, setEditPeople] = useState<EditPerson[]>([]);
   const [editSaving, setEditSaving] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(true);
+  const [bookingMessage, setBookingMessage] = useState("");
+  const [bookingSaving, setBookingSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -151,6 +154,10 @@ export default function AdminPage() {
       setRegistrations((data.registrations || []) as Registration[]);
       setSizeTotals((data.sizeTotals || {}) as Record<string, number>);
       setTotals(data.totals as Totals);
+      if (data.booking) {
+        setBookingOpen(data.booking.open !== false);
+        setBookingMessage(String(data.booking.message || "").trim());
+      }
       const next: Record<string, { status: PaymentStatus; note: string }> = {};
       for (const s of list) {
         next[s.schoolId] = {
@@ -412,6 +419,51 @@ export default function AdminPage() {
     );
   }
 
+  async function toggleBooking() {
+    const nextOpen = !bookingOpen;
+    const ok = await confirmAction({
+      title: nextOpen ? "เปิดรับจองเสื้อ?" : "ปิดรับจองเสื้อ?",
+      text: nextOpen
+        ? "ผู้ใช้จะสามารถลงทะเบียนจองเสื้อได้อีกครั้ง"
+        : "หน้าลงทะเบียนจะแสดงว่าปิดรับจอง และ API จะปฏิเสธการส่งใหม่",
+      confirmText: nextOpen ? "เปิดระบบจอง" : "ปิดระบบจอง",
+      icon: "warning",
+    });
+    if (!ok) return;
+
+    setBookingSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/booking", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          open: nextOpen,
+          message: bookingMessage || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "อัปเดตระบบจองไม่สำเร็จ");
+      }
+      setBookingOpen(Boolean(data.booking?.open));
+      setBookingMessage(String(data.booking?.message || "").trim());
+      toastSuccess(
+        data.booking?.open ? "เปิดรับจองแล้ว" : "ปิดรับจองแล้ว",
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "อัปเดตระบบจองไม่สำเร็จ";
+      setError(msg);
+      toastError(msg);
+      if (/(รหัสผ่าน|ชื่อผู้ใช้|ไม่ถูกต้อง)/.test(msg)) {
+        setAuthed(false);
+      }
+    } finally {
+      setBookingSaving(false);
+    }
+  }
+
   function openEdit(reg: Registration) {
     setEditing(reg);
     setEditSchoolId(reg.schoolId);
@@ -594,8 +646,25 @@ export default function AdminPage() {
         <div className="admin-topbar-user">
           <span className="admin-topbar-label">Admin</span>
           <strong>{username || "admin"}</strong>
+          <span
+            className={`booking-status-chip ${bookingOpen ? "is-open" : "is-closed"}`}
+          >
+            {bookingOpen ? "เปิดรับจอง" : "ปิดรับจอง"}
+          </span>
         </div>
         <div className="admin-topbar-actions">
+          <button
+            type="button"
+            className={bookingOpen ? "btn-booking-close" : "btn-booking-open"}
+            onClick={toggleBooking}
+            disabled={bookingSaving || loading}
+          >
+            {bookingSaving
+              ? "กำลังบันทึก..."
+              : bookingOpen
+                ? "ปิดระบบจอง"
+                : "เปิดระบบจอง"}
+          </button>
           <button
             type="button"
             className="btn-ghost"
@@ -701,7 +770,43 @@ export default function AdminPage() {
 
       {tab === "overview" && (
         <div className="admin-section">
-          <h2 className="admin-section-title">อนุมัติเร็ว · รอตรวจสอบ</h2>
+          <div
+            className={`booking-control-card ${bookingOpen ? "is-open" : "is-closed"}`}
+          >
+            <div>
+              <h2 className="admin-section-title mb-0">ระบบจองเสื้อ</h2>
+              <p className="admin-meta mb-0">
+                สถานะปัจจุบัน:{" "}
+                <strong>{bookingOpen ? "เปิดรับจอง" : "ปิดรับจอง"}</strong>
+                {bookingMessage && !bookingOpen
+                  ? ` · ${bookingMessage}`
+                  : ""}
+              </p>
+            </div>
+            <div className="booking-control-actions">
+              <input
+                className="field field-solid"
+                value={bookingMessage}
+                onChange={(e) => setBookingMessage(e.target.value)}
+                placeholder="ข้อความตอนปิดรับจอง (ถ้ามี)"
+                disabled={bookingSaving}
+              />
+              <button
+                type="button"
+                className={bookingOpen ? "btn-booking-close" : "btn-booking-open"}
+                onClick={toggleBooking}
+                disabled={bookingSaving || loading}
+              >
+                {bookingSaving
+                  ? "กำลังบันทึก..."
+                  : bookingOpen
+                    ? "ปิดระบบจอง"
+                    : "เปิดระบบจอง"}
+              </button>
+            </div>
+          </div>
+
+          <h2 className="admin-section-title mt-8">อนุมัติเร็ว · รอตรวจสอบ</h2>
           <div className="quick-approve-list">
             {pendingSchools.map((school) => {
               const order = registrations.find(

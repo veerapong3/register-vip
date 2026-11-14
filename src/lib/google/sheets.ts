@@ -80,10 +80,20 @@ export type AdminRegistration = {
   people: { name: string; jerseyNumber: string; size: string }[];
 };
 
+export type BookingSettings = {
+  open: boolean;
+  message: string;
+  updatedAt: string;
+};
+
+export const DEFAULT_BOOKING_CLOSED_MESSAGE =
+  "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ";
+
 export type AdminDashboard = {
   schools: SchoolOrderSummary[];
   registrations: AdminRegistration[];
   sizeTotals: Record<string, number>;
+  booking: BookingSettings;
   totals: {
     schools: number;
     shirts: number;
@@ -175,6 +185,128 @@ async function ensurePaymentsSheet() {
     valueInputOption: "RAW",
     requestBody: { values: [[...PAYMENT_HEADERS]] },
   });
+}
+
+function bangkokNow() {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  })
+    .format(new Date())
+    .replace(" ", "T");
+}
+
+async function ensureSettingsSheet() {
+  const sheets = getSheetsClient();
+  const spreadsheetId = getSheetId();
+  const meta = await sheets.spreadsheets.get({ spreadsheetId });
+  const exists = meta.data.sheets?.some(
+    (s) => s.properties?.title === "Settings",
+  );
+
+  if (!exists) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [{ addSheet: { properties: { title: "Settings" } } }],
+      },
+    });
+  }
+
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "Settings!A1:C1",
+  });
+  const header = res.data.values?.[0] || [];
+  if (header[0] === "key" && header[1] === "value") return;
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: "Settings!A1:C1",
+    valueInputOption: "RAW",
+    requestBody: { values: [["key", "value", "updatedAt"]] },
+  });
+}
+
+function parseBool(raw: string, fallback: boolean) {
+  const v = String(raw || "")
+    .trim()
+    .toLowerCase();
+  if (["1", "true", "yes", "open", "on"].includes(v)) return true;
+  if (["0", "false", "no", "closed", "off"].includes(v)) return false;
+  return fallback;
+}
+
+export async function getBookingSettings(): Promise<BookingSettings> {
+  await ensureSettingsSheet();
+  const sheets = getSheetsClient();
+  const spreadsheetId = getSheetId();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "Settings!A2:C",
+  });
+
+  const map = new Map<string, { value: string; updatedAt: string }>();
+  for (const row of res.data.values ?? []) {
+    const key = String(row[0] || "").trim();
+    if (!key) continue;
+    map.set(key, {
+      value: String(row[1] || ""),
+      updatedAt: String(row[2] || ""),
+    });
+  }
+
+  const openRow = map.get("bookingOpen");
+  const messageRow = map.get("bookingMessage");
+  return {
+    open: parseBool(openRow?.value || "", true),
+    message:
+      String(messageRow?.value || "").trim() || DEFAULT_BOOKING_CLOSED_MESSAGE,
+    updatedAt: openRow?.updatedAt || messageRow?.updatedAt || "",
+  };
+}
+
+export async function setBookingSettings(input: {
+  open: boolean;
+  message?: string;
+}): Promise<BookingSettings> {
+  await ensureSettingsSheet();
+  const sheets = getSheetsClient();
+  const spreadsheetId = getSheetId();
+  const now = bangkokNow();
+  const message =
+    String(input.message || "").trim() || DEFAULT_BOOKING_CLOSED_MESSAGE;
+
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "Settings!A:C",
+  });
+  const rows = res.data.values ?? [];
+  const next = new Map<string, string[]>();
+  for (const row of rows.slice(1)) {
+    const key = String(row[0] || "").trim();
+    if (!key) continue;
+    next.set(key, [key, String(row[1] || ""), String(row[2] || "")]);
+  }
+  next.set("bookingOpen", ["bookingOpen", input.open ? "true" : "false", now]);
+  next.set("bookingMessage", ["bookingMessage", message, now]);
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: "Settings!A1:C",
+    valueInputOption: "RAW",
+    requestBody: {
+      values: [["key", "value", "updatedAt"], ...next.values()],
+    },
+  });
+
+  return { open: input.open, message, updatedAt: now };
 }
 
 export async function appendRegistrationRows(rows: SheetPersonRow[]) {
@@ -399,10 +531,13 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
     .filter((s) => !settled(s))
     .reduce((sum, s) => sum + s.totalAmount, 0);
 
+  const booking = await getBookingSettings();
+
   return {
     schools,
     registrations,
     sizeTotals,
+    booking,
     totals: {
       schools: schools.length,
       shirts: schools.reduce((s, x) => s + x.totalQty, 0),

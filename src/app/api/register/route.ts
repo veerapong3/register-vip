@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { uploadSlip } from "@/lib/google/drive";
-import { appendRegistrationRows } from "@/lib/google/sheets";
+import {
+  appendRegistrationRows,
+  getBookingSettings,
+} from "@/lib/google/sheets";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { SCHOOLS } from "@/lib/schools";
 import { getSize, priceForSize, SHIRT_SIZES } from "@/lib/sizes";
@@ -48,6 +51,18 @@ function makeRegistrationId() {
 
 export async function POST(req: Request) {
   try {
+    const booking = await getBookingSettings();
+    if (!booking.open) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: booking.message || "ขณะนี้ปิดรับจองเสื้อชั่วคราว",
+          closed: true,
+        },
+        { status: 403 },
+      );
+    }
+
     const ip = clientIp(req);
     const limited = rateLimit({
       key: `register:${ip}`,

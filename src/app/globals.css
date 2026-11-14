@@ -1016,6 +1016,112 @@ body {
   min-width: 0;
 }
 
+.booking-status-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 0.2rem;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.booking-status-chip.is-open {
+  background: rgba(176, 245, 205, 0.22);
+  color: #d8ffe8;
+}
+
+.booking-status-chip.is-closed {
+  background: rgba(255, 210, 210, 0.22);
+  color: #ffd6d6;
+}
+
+.btn-booking-open,
+.btn-booking-close {
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+  color: white;
+}
+
+.btn-booking-open {
+  background: linear-gradient(135deg, #1f8f5f, #147048);
+  box-shadow: 0 8px 18px rgba(20, 112, 72, 0.18);
+}
+
+.btn-booking-close {
+  background: linear-gradient(135deg, #c2410c, #9a3412);
+  box-shadow: 0 8px 18px rgba(154, 52, 18, 0.18);
+}
+
+.btn-booking-open:disabled,
+.btn-booking-close:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.booking-control-card {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.85rem 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  margin-bottom: 0.25rem;
+}
+
+.booking-control-card.is-open {
+  background: linear-gradient(160deg, #f3fbf6 0%, #dff5e8 100%);
+  border-color: #8fd0ab;
+}
+
+.booking-control-card.is-closed {
+  background: linear-gradient(160deg, #fff7f2 0%, #ffe4d6 100%);
+  border-color: #f0b090;
+}
+
+.booking-control-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  flex: 1 1 16rem;
+}
+
+.booking-control-actions .field {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.booking-closed-banner {
+  margin: 0.75rem 0 0;
+  max-width: 34rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.85rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.hero-cta-disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.booking-closed-panel {
+  background: linear-gradient(160deg, #fff7f2 0%, #ffe8da 100%);
+  border-color: #f0b090;
+}
+
 .admin-topbar-label {
   font-size: 0.68rem;
   letter-spacing: 0.08em;
