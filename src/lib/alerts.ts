@@ -66,3 +66,23 @@ export async function alertError(title: string, text?: string) {
     confirmButtonColor: "#b52d5c",
   });
 }
+
+export async function alertInfo(title: string, text?: string) {
+  return Swal.fire({
+    icon: "info",
+    title,
+    text,
+    confirmButtonText: "รับทราบ",
+    confirmButtonColor: "#b52d5c",
+  });
+}
+
+export async function alertWarning(title: string, text?: string) {
+  return Swal.fire({
+    icon: "warning",
+    title,
+    text,
+    confirmButtonText: "รับทราบ",
+    confirmButtonColor: "#c2410c",
+  });
+}

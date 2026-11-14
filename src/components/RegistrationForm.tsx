@@ -6,6 +6,7 @@ import { SchoolSelect } from "@/components/SchoolSelect";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   alertSuccess,
+  alertWarning,
   confirmAction,
   toastError,
   toastSuccess,
@@ -71,8 +72,17 @@ export function RegistrationForm() {
         };
         if (!alive) return;
         if (data.ok) {
-          setBookingOpen(data.open !== false);
-          setBookingMessage(String(data.message || "").trim());
+          const open = data.open !== false;
+          const message = String(data.message || "").trim();
+          setBookingOpen(open);
+          setBookingMessage(message);
+          if (!open) {
+            await alertWarning(
+              "ปิดรับจองชั่วคราว",
+              message ||
+                "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ",
+            );
+          }
         }
       } catch {
         // keep default open if status check fails; API still enforces
@@ -233,6 +243,10 @@ export function RegistrationForm() {
     }
   }
 
+  const closedText =
+    bookingMessage ||
+    "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ";
+
   if (success) {
     return (
       <div className="success-wrap">
@@ -283,6 +297,12 @@ export function RegistrationForm() {
 
   return (
     <>
+      {!bookingLoading && !bookingOpen && (
+        <div className="booking-closed-topbar" role="status">
+          <strong>ปิดรับจองชั่วคราว</strong>
+          <span>{closedText}</span>
+        </div>
+      )}
       <section className="hero">
         <div
           className="hero-media"
@@ -314,10 +334,11 @@ export function RegistrationForm() {
             ตัวละ {BASE_PRICE}
           </p>
           {!bookingLoading && !bookingOpen && (
-            <p className="booking-closed-banner anim-fade anim-delay-2">
-              {bookingMessage ||
-                "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ"}
-            </p>
+            <div className="booking-closed-banner anim-fade anim-delay-2">
+              <span className="booking-closed-badge">ปิดรับจอง</span>
+              <strong>ระบบปิดรับจองชั่วคราว</strong>
+              <p>{closedText}</p>
+            </div>
           )}
           <div className="hero-actions anim-fade anim-delay-3">
             <button
@@ -393,16 +414,26 @@ export function RegistrationForm() {
 
         {!bookingLoading && !bookingOpen ? (
           <section className="step-panel booking-closed-panel">
+            <span className="booking-closed-badge">ปิดรับจอง</span>
             <p className="step-kicker">ระบบจอง</p>
             <h2 className="step-title">ปิดรับจองชั่วคราว</h2>
+            <p className="booking-closed-message">{closedText}</p>
             <p className="step-desc mb-0">
-              {bookingMessage ||
-                "ขณะนี้ปิดรับจองเสื้อชั่วคราว กรุณาติดต่อผู้ดูแลระบบ"}
+              ไม่สามารถส่งรายการจองใหม่ได้ในขณะนี้ · สามารถดูสรุปออเดอร์ได้ตามปกติ
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/summary" className="btn-ghost">
                 ดูสรุปออเดอร์
               </Link>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() =>
+                  alertWarning("ปิดรับจองชั่วคราว", closedText)
+                }
+              >
+                ดูข้อความอีกครั้ง
+              </button>
             </div>
           </section>
         ) : (
