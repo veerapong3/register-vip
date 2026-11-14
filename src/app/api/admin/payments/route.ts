@@ -8,7 +8,12 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ALLOWED: PaymentStatus[] = ["รอตรวจสอบ", "ชำระแล้ว", "ไม่ครบ/มีปัญหา"];
+const ALLOWED: PaymentStatus[] = [
+  "รอตรวจสอบ",
+  "ชำระแล้ว",
+  "ไม่ต้องชำระเงิน",
+  "ไม่ครบ/มีปัญหา",
+];
 
 export async function POST(req: Request) {
   try {

@@ -1801,6 +1801,11 @@ body {
   border-color: #8fd0ab;
 }
 
+.summary-card.admin-card.is-free {
+  background: linear-gradient(160deg, #f4f8fc 0%, #e2eef8 100%);
+  border-color: #9ec0de;
+}
+
 .summary-card.admin-card.is-issue {
   background: linear-gradient(160deg, #fff6f6 0%, #ffe1e1 100%);
   border-color: #efb0b0;
@@ -1833,6 +1838,10 @@ body {
   color: #0f7a3c;
 }
 
+.admin-card.is-free .summary-amount {
+  color: #1f5f8f;
+}
+
 .admin-card.is-issue .summary-amount {
   color: #b42318;
 }
@@ -1860,6 +1869,11 @@ body {
 .status-paid {
   background: #cfeedd;
   color: #0b6a34;
+}
+
+.status-free {
+  background: #d6e8f6;
+  color: #1a567f;
 }
 
 .status-issue {

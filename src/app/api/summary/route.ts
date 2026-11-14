@@ -18,11 +18,13 @@ export async function GET() {
       updatedAt: s.updatedAt,
     }));
     const totalQty = publicSchools.reduce((sum, x) => sum + x.totalQty, 0);
+    const isSettled = (status: string) =>
+      status === "ชำระแล้ว" || status === "ไม่ต้องชำระเงิน";
     const paidSchools = schools.filter(
       (x) => x.paymentStatus === "ชำระแล้ว",
     ).length;
     const pendingSchools = schools.filter(
-      (x) => x.paymentStatus !== "ชำระแล้ว",
+      (x) => !isSettled(x.paymentStatus),
     ).length;
     const paidQty = schools
       .filter((x) => x.paymentStatus === "ชำระแล้ว")

@@ -15,7 +15,11 @@ import { downloadCsv, stamp } from "@/lib/exportCsv";
 import { SCHOOLS } from "@/lib/schools";
 import { BASE_PRICE, SHIRT_SIZES } from "@/lib/sizes";
 
-type PaymentStatus = "รอตรวจสอบ" | "ชำระแล้ว" | "ไม่ครบ/มีปัญหา";
+type PaymentStatus =
+  | "รอตรวจสอบ"
+  | "ชำระแล้ว"
+  | "ไม่ต้องชำระเงิน"
+  | "ไม่ครบ/มีปัญหา";
 
 type SchoolSummary = {
   schoolId: string;
@@ -68,6 +72,7 @@ type Totals = {
   paidSchools: number;
   pendingSchools: number;
   issueSchools: number;
+  freeSchools: number;
   registrations: number;
 };
 
@@ -75,12 +80,14 @@ type Tab = "overview" | "schools" | "orders";
 
 function statusClass(status: string) {
   if (status === "ชำระแล้ว") return "status-paid";
+  if (status === "ไม่ต้องชำระเงิน") return "status-free";
   if (status === "ไม่ครบ/มีปัญหา") return "status-issue";
   return "status-pending";
 }
 
 function cardToneClass(status: string) {
   if (status === "ชำระแล้ว") return "is-paid";
+  if (status === "ไม่ต้องชำระเงิน") return "is-free";
   if (status === "ไม่ครบ/มีปัญหา") return "is-issue";
   return "is-pending";
 }
@@ -354,7 +361,9 @@ export default function AdminPage() {
       toastSuccess(
         status === "ชำระแล้ว"
           ? `อนุมัติแล้ว · ${school.schoolName}`
-          : `บันทึกสถานะแล้ว · ${school.schoolName}`,
+          : status === "ไม่ต้องชำระเงิน"
+            ? `ตั้งเป็นไม่ต้องชำระเงิน · ${school.schoolName}`
+            : `บันทึกสถานะแล้ว · ${school.schoolName}`,
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : "อัปเดตไม่สำเร็จ";
@@ -377,10 +386,30 @@ export default function AdminPage() {
       title: "บันทึกสถานะชำระเงิน?",
       text: `${school.schoolName} → ${draft.status}`,
       confirmText: "บันทึก",
-      icon: draft.status === "ชำระแล้ว" ? "question" : "warning",
+      icon:
+        draft.status === "ชำระแล้ว" || draft.status === "ไม่ต้องชำระเงิน"
+          ? "question"
+          : "warning",
     });
     if (!ok) return;
     await persistSchoolStatus(school, draft.status, draft.note);
+  }
+
+  async function markNoPayment(school: SchoolSummary) {
+    const ok = await confirmAction({
+      title: "ตั้งเป็นไม่ต้องชำระเงิน?",
+      text: `${school.schoolName} · ${school.totalQty} ตัว · จะไม่นับเป็นยอดรอชำระ`,
+      confirmText: "ไม่ต้องชำระเงิน",
+      icon: "question",
+    });
+    if (!ok) return;
+    await persistSchoolStatus(
+      school,
+      "ไม่ต้องชำระเงิน",
+      drafts[school.schoolId]?.note ||
+        school.paymentNote ||
+        "แอดมินยกเว้นการชำระเงิน",
+    );
   }
 
   function openEdit(reg: Registration) {
@@ -663,6 +692,10 @@ export default function AdminPage() {
             <span>มีปัญหา</span>
             <strong>{totals.issueSchools} รร.</strong>
           </div>
+          <div>
+            <span>ไม่ต้องชำระ</span>
+            <strong>{totals.freeSchools || 0} รร.</strong>
+          </div>
         </div>
       )}
 
@@ -714,6 +747,14 @@ export default function AdminPage() {
                       {savingId === school.schoolId
                         ? "กำลังอนุมัติ..."
                         : "อนุมัติชำระแล้ว"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      disabled={savingId === school.schoolId}
+                      onClick={() => markNoPayment(school)}
+                    >
+                      ไม่ต้องชำระเงิน
                     </button>
                   </div>
                 </article>
@@ -809,6 +850,7 @@ export default function AdminPage() {
               <option value="all">ทุกสถานะ</option>
               <option value="รอตรวจสอบ">รอตรวจสอบ</option>
               <option value="ชำระแล้ว">ชำระแล้ว</option>
+              <option value="ไม่ต้องชำระเงิน">ไม่ต้องชำระเงิน</option>
               <option value="ไม่ครบ/มีปัญหา">ไม่ครบ/มีปัญหา</option>
             </select>
           )}
@@ -917,6 +959,7 @@ export default function AdminPage() {
                     >
                       <option value="รอตรวจสอบ">รอตรวจสอบ</option>
                       <option value="ชำระแล้ว">ชำระแล้ว</option>
+                      <option value="ไม่ต้องชำระเงิน">ไม่ต้องชำระเงิน</option>
                       <option value="ไม่ครบ/มีปัญหา">ไม่ครบ/มีปัญหา</option>
                     </select>
                   </div>

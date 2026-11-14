@@ -28,7 +28,11 @@ const PAYMENT_HEADERS = [
   "อัปเดตล่าสุด",
 ] as const;
 
-export type PaymentStatus = "รอตรวจสอบ" | "ชำระแล้ว" | "ไม่ครบ/มีปัญหา";
+export type PaymentStatus =
+  | "รอตรวจสอบ"
+  | "ชำระแล้ว"
+  | "ไม่ต้องชำระเงิน"
+  | "ไม่ครบ/มีปัญหา";
 
 export type SheetPersonRow = {
   timestamp: string;
@@ -89,6 +93,7 @@ export type AdminDashboard = {
     paidSchools: number;
     pendingSchools: number;
     issueSchools: number;
+    freeSchools: number;
     registrations: number;
   };
 };
@@ -384,11 +389,14 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
     b.timestamp.localeCompare(a.timestamp),
   );
 
+  const settled = (s: SchoolOrderSummary) =>
+    s.paymentStatus === "ชำระแล้ว" || s.paymentStatus === "ไม่ต้องชำระเงิน";
+
   const paidAmount = schools
     .filter((s) => s.paymentStatus === "ชำระแล้ว")
     .reduce((sum, s) => sum + s.totalAmount, 0);
   const pendingAmount = schools
-    .filter((s) => s.paymentStatus !== "ชำระแล้ว")
+    .filter((s) => !settled(s))
     .reduce((sum, s) => sum + s.totalAmount, 0);
 
   return {
@@ -405,6 +413,8 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
       pendingSchools: schools.filter((s) => s.paymentStatus === "รอตรวจสอบ")
         .length,
       issueSchools: schools.filter((s) => s.paymentStatus === "ไม่ครบ/มีปัญหา")
+        .length,
+      freeSchools: schools.filter((s) => s.paymentStatus === "ไม่ต้องชำระเงิน")
         .length,
       registrations: registrations.length,
     },

@@ -13,7 +13,11 @@ type SchoolSummary = {
   contactName?: string;
   totalQty: number;
   sizes: Record<string, number>;
-  paymentStatus: "รอตรวจสอบ" | "ชำระแล้ว" | "ไม่ครบ/มีปัญหา";
+  paymentStatus:
+    | "รอตรวจสอบ"
+    | "ชำระแล้ว"
+    | "ไม่ต้องชำระเงิน"
+    | "ไม่ครบ/มีปัญหา";
   updatedAt: string;
 };
 
@@ -32,12 +36,14 @@ type SummaryResponse = {
 
 function statusClass(status: string) {
   if (status === "ชำระแล้ว") return "status-paid";
+  if (status === "ไม่ต้องชำระเงิน") return "status-free";
   if (status === "ไม่ครบ/มีปัญหา") return "status-issue";
   return "status-pending";
 }
 
 function cardToneClass(status: string) {
   if (status === "ชำระแล้ว") return "is-paid";
+  if (status === "ไม่ต้องชำระเงิน") return "is-free";
   if (status === "ไม่ครบ/มีปัญหา") return "is-issue";
   return "is-pending";
 }
